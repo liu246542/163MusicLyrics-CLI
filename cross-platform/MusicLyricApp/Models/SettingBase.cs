@@ -81,6 +81,11 @@ public class ConfigBean
     public string OutputFileNameFormat = "${name} - ${singer}";
 
     /// <summary>
+    /// 最近一次保存目录
+    /// </summary>
+    public string LastSaveFolderPath = "";
+
+    /// <summary>
     /// 输出的歌词类型列表
     /// </summary>
     public string OutputLyricTypes = string.Join(",", [(int)LyricsTypeEnum.ORIGIN, (int)LyricsTypeEnum.ORIGIN_TRANS]);

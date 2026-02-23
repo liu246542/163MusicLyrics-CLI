@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:MusicLyricApp.ViewModels"
+             mc:Ignorable="d"
+             x:Class="MusicLyricApp.Views.BatchSearchView"
+             x:DataType="viewModels:BatchSearchViewModel"
+             d:DesignWidth="900" d:DesignHeight="640">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="12" RowSpacing="10">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="Batch Results" FontWeight="Bold" />
+            <TextBlock Text="{Binding Summary}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <StackPanel Spacing="6">
+                <TextBox Text="{Binding BatchInputText}"
+                         Height="60"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         IsReadOnly="True" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBox Text="{Binding LastSaveFolderPath}" IsReadOnly="True" Width="520" />
+                </StackPanel>
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Content="Select Folder"
+                    Width="130"
+                    Command="{Binding ExecuteSelectFolderCommand}" />
+        </Grid>
+
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Items}"
+                  AutoGenerateColumns="False"
+                  CanUserReorderColumns="False"
+                  CanUserSortColumns="True"
+                  RowHeight="30"
+                  BorderThickness="1">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="" Width="40" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Song ID" Binding="{Binding SongId}" Width="120" />
+                <DataGridTextColumn Header="Song Name" Binding="{Binding SongName}" Width="*" />
+                <DataGridTextColumn Header="Singer" Binding="{Binding Singer}" Width="180" />
+                <DataGridTextColumn Header="Album" Binding="{Binding Album}" Width="200" />
+                <DataGridTemplateColumn Header="Status" Width="220" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{Binding Status}" />
+                                <TextBlock Text="{Binding Error}" Foreground="#B42318" />
+                                <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" Height="14" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="Select All" Width="110" Command="{Binding ExecuteSelectAllCommand}" />
+            <Button Content="Clear Selection" Width="130" Command="{Binding ExecuteClearSelectedCommand}" />
+            <Button Content="Save Selected" Width="130" Command="{Binding ExecuteStartSelectedCommand}" />
+            <Button Content="Delete Selected" Width="130" Command="{Binding ExecuteDeleteSelectedCommand}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

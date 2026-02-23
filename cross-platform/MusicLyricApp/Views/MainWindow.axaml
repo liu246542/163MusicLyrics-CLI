@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:MusicLyricApp.ViewModels"
         x:Class="MusicLyricApp.Views.MainWindow"
@@ -61,7 +61,7 @@
                 </WrapPanel>
 
                 <!-- 第二行搜索控件 -->
-                <WrapPanel ItemSpacing="8">
+                <WrapPanel ItemSpacing="6">
                     <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
                         <TextBlock Text="搜索类型" Width="70" VerticalAlignment="Center" />
                         <ComboBox ItemsSource="{Binding SearchParamViewModel.SearchTypes}"
@@ -72,35 +72,51 @@
                     <TextBox Name="SearchTextBox" Width="222" Height="30" Margin="0,0,8,8"
                              Text="{Binding SearchParamViewModel.SearchText}" />
 
-                    <Button Content="直链" Width="50" Height="30" Margin="0,0,8,8"
-                            Command="{Binding ExecuteSongLinkCommand}" />
-                    <Button Content="封面" Width="50" Height="30" Margin="0,0,8,8"
-                            Command="{Binding ExecuteSongPicCommand}" />
-                    <Button Content="精确搜索" Width="100" Height="30" Margin="0,0,8,8"
+                    <Button Content="精确搜索" Width="235" Height="30" Margin="0,0,8,8"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                             Command="{Binding ExecuteSearchCommand}" />
                 </WrapPanel>
 
                 <!-- 信息显示区域 -->
-                <WrapPanel ItemSpacing="8">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
-                        <TextBlock Text="歌手：" Width="50" VerticalAlignment="Center" />
-                        <TextBox Text="{Binding SearchResultViewModel.Singer, Mode=OneWay}" Width="163"
-                                 IsReadOnly="True" />
-                    </StackPanel>
+                <StackPanel Spacing="3">
+                    <DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
+                            <TextBlock Text="歌手：" Width="50" />
+                            <TextBox Text="{Binding SearchResultViewModel.Singer, Mode=OneWay}" Width="163"
+                                     IsReadOnly="True" />
+                        </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
-                        <TextBlock Text="歌名：" Width="50" VerticalAlignment="Center" />
-                        <TextBox Text="{Binding SearchResultViewModel.SongName, Mode=OneWay}" Width="163"
-                                 IsReadOnly="True" />
-                    </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
+                            <TextBlock Text="歌名：" Width="50" />
+                            <TextBox Text="{Binding SearchResultViewModel.SongName, Mode=OneWay}" Width="163"
+                                     IsReadOnly="True" />
+                        </StackPanel>
+                    </DockPanel>
+                   
+                    <DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
+                            <TextBlock Text="专辑：" Width="50" />
+                            <TextBox Text="{Binding SearchResultViewModel.Album, Mode=OneWay}" Width="163"
+                                     IsReadOnly="True" />
+                        </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
-                        <TextBlock Text="专辑：" Width="50" VerticalAlignment="Center" />
-                        <TextBox Text="{Binding SearchResultViewModel.Album, Mode=OneWay}" Width="163"
-                                 IsReadOnly="True" />
-                    </StackPanel>
-                </WrapPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
+                            <TextBlock Text="直链：" Width="50" />
+                            <TextBox Text="{Binding SearchResultViewModel.SongLink, Mode=OneWay}" Width="163"
+                                     IsReadOnly="True" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- 封面图片显示区域 -->
+                    <DockPanel>
+                        <Border BorderBrush="Gray" BorderThickness="1" Width="120" Height="120"
+                                HorizontalAlignment="Right" VerticalAlignment="Top">
+                            <Image Name="AlbumCoverImage" Width="118" Height="118"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Stretch="UniformToFill" />
+                        </Border>
+                    </DockPanel>
+                </StackPanel>
 
                 <!-- 控制台输出 -->
                 <TextBox Text="{Binding SearchResultViewModel.ConsoleOutput, Mode=OneWay}"
@@ -132,6 +148,22 @@
                     <Button Content="保存" Width="200" Height="30" Margin="10,0,8,8"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                             Command="{Binding ExecuteSaveCommand}" />
+                </WrapPanel>
+
+                <WrapPanel ItemSpacing="4">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
+                        <Button Content="保存路径" Width="90"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Command="{Binding ExecuteSelectOutputFolderCommand}" />
+                        <TextBox Text="{Binding LastSaveFolderPath, Mode=TwoWay}"
+                                 Width="420"
+                                 Margin="8,0,0,0"
+                                 IsReadOnly="True" />
+                    </StackPanel>
+                </WrapPanel>
+
+                <WrapPanel ItemSpacing="4">
+                    <TextBlock Text="{Binding SaveStatusMessage}" />
                 </WrapPanel>
             </StackPanel>
         </ScrollViewer>

@@ -34,6 +34,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private string _appTitle = "MusicLyricApp v7.2";
 
+    [ObservableProperty] private string _lastSaveFolderPath = "";
+    [ObservableProperty] private string _saveStatusMessage = "";
+
     private readonly SearchService _searchService;
 
     private readonly StorageService _storageService = new();
@@ -45,7 +48,21 @@ public partial class MainWindowViewModel : ViewModelBase
     private SettingWindow? _settingWindow;
     
     private BlurSearchWindow? _blurSearchWindow;
+    
+    private BatchSearchWindow? _batchSearchWindow;
 
+    // Parameterless constructor for design-time use
+    public MainWindowViewModel()
+    {
+        _settingBean = new StorageService().ReadAppConfig();
+        _searchService = new SearchService(_settingBean);
+        _windowProvider = null;
+        
+        SearchParamViewModel.Bind(_settingBean.Param);
+        LastSaveFolderPath = _settingBean.Config.LastSaveFolderPath;
+    }
+
+    // Main constructor for runtime use
     public MainWindowViewModel(IWindowProvider windowProvider)
     {
         _windowProvider = windowProvider;
@@ -57,6 +74,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _storageService.SetSearchService(_searchService);
 
         SearchParamViewModel.Bind(_settingBean.Param);
+        LastSaveFolderPath = _settingBean.Config.LastSaveFolderPath;
         
         WeakReferenceMessenger.Default.Register<BlurSearchResultsMessage>(this, (r, m) =>
         {
@@ -106,12 +124,69 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var result = _searchService.SearchSongs(SearchParamViewModel.SongIds, SettingBean);
             LampVm.UpdateLampInfo(result, SettingBean);
-            await _searchService.RenderSearchResult(SearchParamViewModel, SearchResultViewModel, SettingBean, result);
+
+            if (SearchParamViewModel.SongIds.Count == 1)
+            {
+                await _searchService.RenderSearchResult(SearchParamViewModel, SearchResultViewModel, SettingBean, result);
+
+                // 自动获取直链
+                await Task.Run(() =>
+                {
+                    var musicApi = _searchService.GetMusicApi(SettingBean.Param.SearchSource);
+                    var linkResult = musicApi.GetSongLink(SearchParamViewModel.SongIds[0].SongId);
+                    if (linkResult.IsSuccess())
+                    {
+                        SearchResultViewModel.SongLink = linkResult.Data;
+                    }
+                });
+            }
+            else
+            {
+                OpenBatchSearchWindow(result, SearchParamViewModel.SongIds, SearchParamViewModel.SearchText);
+                SearchResultViewModel.SaveVoMap.Clear();
+                SearchResultViewModel.ResetConsoleOutput("Batch search opened in a new window.");
+            }
         }
         catch (Exception ex)
         {
             await DialogHelper.ShowMessage(ex);
         }
+    }
+
+    private void OpenBatchSearchWindow(
+        Dictionary<string, ResultVo<SaveVo>> result,
+        List<InputSongId> inputSongIds,
+        string inputText)
+    {
+        if (_batchSearchWindow != null)
+        {
+            if (!_batchSearchWindow.IsVisible)
+            {
+                _batchSearchWindow = null;
+            }
+            else
+            {
+                if (_batchSearchWindow.WindowState == WindowState.Minimized)
+                {
+                    _batchSearchWindow.WindowState = WindowState.Normal;
+                }
+
+                _batchSearchWindow.Activate();
+                _batchSearchWindow.UpdateResults(result, inputSongIds, inputText);
+                return;
+            }
+        }
+
+        _batchSearchWindow = new BatchSearchWindow(
+            result,
+            inputSongIds,
+            inputText,
+            SettingBean,
+            _searchService,
+            _storageService,
+            _windowProvider);
+        _batchSearchWindow.Closed += (_, _) => _batchSearchWindow = null;
+        _batchSearchWindow.Show();
     }
 
     [RelayCommand]
@@ -158,7 +233,8 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             var message = await _storageService.SaveResult(SearchResultViewModel, SettingBean, _windowProvider);
-            await DialogHelper.ShowMessage(message);
+            LastSaveFolderPath = SettingBean.Config.LastSaveFolderPath;
+            SaveStatusMessage = message;
         }
         catch (Exception ex)
         {
@@ -381,5 +457,23 @@ public partial class MainWindowViewModel : ViewModelBase
     private void UpdateTheme()
     {
         ((App)Application.Current!).SetTheme(SettingBean.Config.ThemeMode);
+    }
+
+    [RelayCommand]
+    private async Task ExecuteSelectOutputFolderAsync()
+    {
+        try
+        {
+            await _storageService.SelectFolderAndRememberAsync(SettingBean, _windowProvider);
+            LastSaveFolderPath = SettingBean.Config.LastSaveFolderPath;
+            SaveStatusMessage = "已更新保存位置";
+        }
+        catch (Exception ex)
+        {
+            if (ex.Message != ErrorMsgConst.STORAGE_FOLDER_ERROR)
+            {
+                await DialogHelper.ShowMessage(ex);
+            }
+        }
     }
 }

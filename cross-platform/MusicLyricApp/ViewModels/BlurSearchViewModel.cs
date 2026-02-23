@@ -20,7 +20,7 @@ public partial class BlurSearchViewModel(List<SearchResultVo> searchResList) : V
     // 通知 View 创建列
     public event Action<List<DataGridTextColumn>>? ColumnsChanged;
 
-    [ObservableProperty] private IList _selectedItems;
+    [ObservableProperty] private IList _selectedItems = new List<object>();
 
     public void LoadTypeAResults()
     {

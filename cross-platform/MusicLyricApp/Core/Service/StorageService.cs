@@ -130,7 +130,7 @@ public class StorageService : IStorageService
         }
     }
 
-    private static async Task<string> SaveSingleResult(SearchResultViewModel searchResult, SettingBean settingBean,
+    private async Task<string> SaveSingleResult(SearchResultViewModel searchResult, SettingBean settingBean,
         IWindowProvider windowProvider)
     {
         var saveVo = searchResult.SaveVoMap.Values.First();
@@ -141,15 +141,15 @@ public class StorageService : IStorageService
             throw new MusicLyricException(preCheck);
         }
 
-        await WriteToFile(await SelectFolder(windowProvider), saveVo, settingBean);
+        await WriteToFile(await ResolveSaveFolderAsync(settingBean, windowProvider), saveVo, settingBean);
 
         return string.Format(ErrorMsgConst.SAVE_COMPLETE, 1, 0);
     }
 
-    private static async Task<string> SaveBatchResult(SearchResultViewModel searchResult, SettingBean settingBean,
+    private async Task<string> SaveBatchResult(SearchResultViewModel searchResult, SettingBean settingBean,
         IWindowProvider windowProvider)
     {
-        var folder = await SelectFolder(windowProvider);
+        var folder = await ResolveSaveFolderAsync(settingBean, windowProvider);
 
         var skipRes = new Dictionary<string, string>();
         var successRes = new HashSet<string>();
@@ -193,7 +193,38 @@ public class StorageService : IStorageService
         return ErrorMsgConst.SUCCESS;
     }
 
-    private static async Task<IStorageFolder> SelectFolder(IWindowProvider windowProvider)
+    public async Task<IStorageFolder> SelectFolderAndRememberAsync(SettingBean settingBean, IWindowProvider windowProvider)
+    {
+        var folder = await PickFolderAsync(windowProvider);
+        RememberFolder(settingBean, folder);
+        return folder;
+    }
+
+    private async Task<IStorageFolder> ResolveSaveFolderAsync(SettingBean settingBean, IWindowProvider windowProvider)
+    {
+        var cached = await TryGetRememberedFolderAsync(settingBean, windowProvider);
+        if (cached != null)
+        {
+            return cached;
+        }
+
+        var picked = await PickFolderAsync(windowProvider);
+        RememberFolder(settingBean, picked);
+        return picked;
+    }
+
+    private async Task<IStorageFolder?> TryGetRememberedFolderAsync(SettingBean settingBean, IWindowProvider windowProvider)
+    {
+        var path = settingBean.Config.LastSaveFolderPath;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        return await windowProvider.TryGetFolderFromPathAsync(path);
+    }
+
+    private static async Task<IStorageFolder> PickFolderAsync(IWindowProvider windowProvider)
     {
         var folders = await windowProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
@@ -205,6 +236,18 @@ public class StorageService : IStorageService
             throw new MusicLyricException(ErrorMsgConst.STORAGE_FOLDER_ERROR);
 
         return folders[0];
+    }
+
+    private void RememberFolder(SettingBean settingBean, IStorageFolder folder)
+    {
+        var path = folder.Path?.LocalPath ?? folder.Path?.ToString();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        settingBean.Config.LastSaveFolderPath = path;
+        SaveConfig(settingBean);
     }
 
     private static async Task WriteToFile(IStorageFolder folder, SaveVo saveVo, SettingBean settingBean)
