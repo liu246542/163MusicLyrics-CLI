@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using MusicLyricApp.Core.Utils;
@@ -169,7 +170,7 @@ public class StorageService : IStorageService
         resp.EnsureSuccessStatusCode();
 
         var ext = ResolveAudioExt(link, resp.Content.Headers.ContentType?.MediaType);
-        var file = await folder.CreateFileAsync($"{GetSafeFileStem(saveVo.SongVo.Name)}.{ext}");
+        var file = await CreateOutputFileAsync(folder, $"{GetSafeFileStem(saveVo.SongVo.Name)}.{ext}", settingBean);
         await using var output = await file.OpenWriteAsync();
         await using var input = await resp.Content.ReadAsStreamAsync();
         await input.CopyToAsync(output);
@@ -194,7 +195,7 @@ public class StorageService : IStorageService
 
         var folder = await ResolveSaveFolderAsync(settingBean, windowProvider);
         var ext = GetImageExt(saveVo.SongVo.Pics);
-        var file = await folder.CreateFileAsync($"{GetSafeFileStem(saveVo.SongVo.Name)}-cover.{ext}");
+        var file = await CreateOutputFileAsync(folder, $"{GetSafeFileStem(saveVo.SongVo.Name)}-cover.{ext}", settingBean);
 
         using var client = CreateHttpClient();
         var bytes = await client.GetByteArrayAsync(saveVo.SongVo.Pics);
@@ -274,7 +275,7 @@ public class StorageService : IStorageService
             if (!string.IsNullOrWhiteSpace(saveVo.SongVo.Pics))
             {
                 var ext = GetImageExt(saveVo.SongVo.Pics);
-                var file = await folder.CreateFileAsync($"{baseName}-cover.{ext}");
+                var file = await CreateOutputFileAsync(folder, $"{baseName}-cover.{ext}", settingBean);
                 using var client = CreateHttpClient();
                 var bytes = await client.GetByteArrayAsync(saveVo.SongVo.Pics);
                 await using var stream = await file.OpenWriteAsync();
@@ -300,7 +301,7 @@ public class StorageService : IStorageService
             using var resp = await client.GetAsync(linkResult.Data);
             resp.EnsureSuccessStatusCode();
             var ext = ResolveAudioExt(linkResult.Data, resp.Content.Headers.ContentType?.MediaType);
-            var file = await folder.CreateFileAsync($"{baseName}.{ext}");
+            var file = await CreateOutputFileAsync(folder, $"{baseName}.{ext}", settingBean);
             await using var output = await file.OpenWriteAsync();
             await using var input = await resp.Content.ReadAsStreamAsync();
             await input.CopyToAsync(output);
@@ -448,7 +449,7 @@ public class StorageService : IStorageService
         for (var i = 0; i < res.Count; i++)
         {
             var fullName = isSingle ? $"{filename}.{extension}" : $"{filename}-{i}.{extension}";
-            var file = await folder.CreateFileAsync(fullName);
+            var file = await CreateOutputFileAsync(folder, fullName, settingBean);
 
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new StreamWriter(stream, encoding);
@@ -456,6 +457,70 @@ public class StorageService : IStorageService
             await writer.WriteAsync(res[i]);
             await writer.FlushAsync();
         }
+    }
+
+    private static async Task<IStorageFile> CreateOutputFileAsync(IStorageFolder folder, string desiredFileName, SettingBean settingBean)
+    {
+        var resolvedFileName = ResolveFileNameWithConflict(folder, desiredFileName, settingBean);
+        return await folder.CreateFileAsync(resolvedFileName);
+    }
+
+    private static string ResolveFileNameWithConflict(IStorageFolder folder, string desiredFileName, SettingBean settingBean)
+    {
+        if (settingBean.Config.FileConflictStrategy == FileConflictStrategyEnum.OVERWRITE)
+        {
+            return desiredFileName;
+        }
+
+        var folderPath = folder.Path?.LocalPath;
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            return desiredFileName;
+        }
+
+        var desiredPath = Path.Combine(folderPath, desiredFileName);
+        if (!File.Exists(desiredPath))
+        {
+            return desiredFileName;
+        }
+
+        var stem = Path.GetFileNameWithoutExtension(desiredFileName);
+        var ext = Path.GetExtension(desiredFileName);
+        var suffixPattern = NormalizeSuffixPattern(settingBean.Config.FileConflictSuffixPattern);
+
+        for (var n = 1; n <= 100000; n++)
+        {
+            var suffix = SanitizeSuffix(suffixPattern.Replace("{n}", n.ToString()));
+            var candidateName = $"{stem}{suffix}{ext}";
+            if (!File.Exists(Path.Combine(folderPath, candidateName)))
+            {
+                return candidateName;
+            }
+        }
+
+        return desiredFileName;
+    }
+
+    private static string NormalizeSuffixPattern(string? pattern)
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            return " ({n})";
+        }
+
+        return pattern.Contains("{n}") ? pattern : $"{pattern}{{n}}";
+    }
+
+    private static string SanitizeSuffix(string suffix)
+    {
+        if (string.IsNullOrEmpty(suffix))
+        {
+            return suffix;
+        }
+
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var invalidPattern = $"[{Regex.Escape(new string(invalidChars))}]";
+        return Regex.Replace(suffix, invalidPattern, "_");
     }
 }
 

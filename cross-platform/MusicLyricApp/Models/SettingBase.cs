@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace MusicLyricApp.Models;
@@ -8,6 +9,16 @@ public enum NetworkProxyModeEnum
 {
     SYSTEM_PROXY = 0,
     DIRECT_CONNECT = 1
+}
+
+
+public enum FileConflictStrategyEnum
+{
+    [Description("覆盖同名文件")]
+    OVERWRITE = 0,
+
+    [Description("自动追加编号")]
+    APPEND_NUMBER = 1
 }
 
 public class SettingBean
@@ -95,6 +106,16 @@ public class ConfigBean
     /// 输出文件名格式
     /// </summary>
     public string OutputFileNameFormat = "${name} - ${singer}";
+
+    /// <summary>
+    /// 同名文件处理策略
+    /// </summary>
+    public FileConflictStrategyEnum FileConflictStrategy = FileConflictStrategyEnum.OVERWRITE;
+
+    /// <summary>
+    /// 同名文件追加后缀模板，使用 {n} 代表序号
+    /// </summary>
+    public string FileConflictSuffixPattern = " ({n})";
 
     /// <summary>
     /// 最近一次保存目录

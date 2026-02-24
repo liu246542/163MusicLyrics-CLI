@@ -9,6 +9,27 @@ namespace MusicLyricApp.ViewModels;
 
 public partial class SettingParamViewModel : ViewModelBase
 {
+    // -1. 同名文件处理策略
+    public ObservableCollection<EnumDisplayHelper.EnumDisplayItem<FileConflictStrategyEnum>> FileConflictStrategies { get; } =
+        EnumDisplayHelper.GetEnumDisplayCollection<FileConflictStrategyEnum>();
+
+    [ObservableProperty]
+    private EnumDisplayHelper.EnumDisplayItem<FileConflictStrategyEnum> _selectedFileConflictStrategyItem;
+
+    [ObservableProperty]
+    private bool _isConflictSuffixEnabled;
+
+    partial void OnSelectedFileConflictStrategyItemChanged(EnumDisplayHelper.EnumDisplayItem<FileConflictStrategyEnum>? value)
+    {
+        if (value == null)
+        {
+            return;
+        }
+
+        _settingBean.Config.FileConflictStrategy = value.Value;
+        IsConflictSuffixEnabled = value.Value == FileConflictStrategyEnum.APPEND_NUMBER;
+    }
+
     // 0. 网络代理模式
     public ObservableCollection<EnumDisplayHelper.EnumDisplayItem<NetworkProxyModeEnum>> NetworkProxyModes { get; } =
     [
@@ -234,6 +255,14 @@ public partial class SettingParamViewModel : ViewModelBase
         _settingBean.Config.SingerSeparator = newValue;
     }
 
+    // 21.3 同名文件后缀模板
+    [ObservableProperty] private string _fileConflictSuffixPattern;
+
+    partial void OnFileConflictSuffixPatternChanged(string value)
+    {
+        _settingBean.Config.FileConflictSuffixPattern = value;
+    }
+
     // 21.2 关闭时确认
     [ObservableProperty] private bool _confirmBeforeExit;
 
@@ -312,7 +341,12 @@ public partial class SettingParamViewModel : ViewModelBase
     {
         _settingBean = settingBean;
         NetworkClientFactory.Configure(_settingBean.Config.NetworkProxyMode);
-        
+
+        SelectedFileConflictStrategyItem = FileConflictStrategies.First(item => Equals(item.Value, _settingBean.Config.FileConflictStrategy));
+        IsConflictSuffixEnabled = _settingBean.Config.FileConflictStrategy == FileConflictStrategyEnum.APPEND_NUMBER;
+        FileConflictSuffixPattern = string.IsNullOrWhiteSpace(_settingBean.Config.FileConflictSuffixPattern)
+            ? " ({n})"
+            : _settingBean.Config.FileConflictSuffixPattern;
         SelectedNetworkProxyModeItem = NetworkProxyModes.First(item => Equals(item.Value, _settingBean.Config.NetworkProxyMode));
         SelectedDotTypeItem = DotTypes.First(item => Equals(item.Value, _settingBean.Config.DotType));
         SelectedTransLyricLostRuleItem = TransLyricLostRules.First(item => Equals(item.Value, _settingBean.Config.TransConfig.LostRule));
