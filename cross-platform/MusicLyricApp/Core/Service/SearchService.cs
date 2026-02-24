@@ -23,6 +23,8 @@ public class SearchService(SettingBean settingBean) : ISearchService
         { SearchSourceEnum.NET_EASE_MUSIC, new NetEaseMusicApi(() => settingBean.Config.NetEaseCookie) }
     };
 
+    public int LastLocalCacheHitCount { get; private set; }
+
     public IMusicApi GetMusicApi(SearchSourceEnum searchSource)
     {
         return _api[searchSource];
@@ -74,6 +76,7 @@ public class SearchService(SettingBean settingBean) : ISearchService
 
     public Dictionary<string, ResultVo<SaveVo>> SearchSongs(List<InputSongId> inputSongIds, SettingBean settingBean)
     {
+        LastLocalCacheHitCount = 0;
         var isVerbatimLyric = settingBean.Config.VerbatimLyricMode != VerbatimLyricModeEnum.DISABLE;
 
         var resultDict = new Dictionary<string, ResultVo<SaveVo>>();
@@ -99,8 +102,28 @@ public class SearchService(SettingBean settingBean) : ISearchService
         foreach (var searchSourcePair in songDict)
         {
             var musicApi = GetMusicApi(searchSourcePair.Key);
+            var notCachedSongIds = new List<string>();
 
-            var songResp = musicApi.GetSongVo(searchSourcePair.Value.ToArray());
+            foreach (var songId in searchSourcePair.Value)
+            {
+                if (LocalSongCacheService.TryLoadSaveVo(settingBean, searchSourcePair.Key, songId, out var cachedSaveVo))
+                {
+                    var index = songIndexDict[songId];
+                    resultDict[songId] = new ResultVo<SaveVo>(new SaveVo(index, cachedSaveVo.SongVo, cachedSaveVo.LyricVo));
+                    LastLocalCacheHitCount++;
+                }
+                else
+                {
+                    notCachedSongIds.Add(songId);
+                }
+            }
+
+            if (notCachedSongIds.Count == 0)
+            {
+                continue;
+            }
+
+            var songResp = musicApi.GetSongVo(notCachedSongIds.ToArray());
 
             foreach (var (songId, resultVo) in songResp)
             {
@@ -115,7 +138,9 @@ public class SearchService(SettingBean settingBean) : ISearchService
 
                     var index = songIndexDict[songId];
 
-                    songResult = new ResultVo<SaveVo>(new SaveVo(index, songVo, lyricVo));
+                    var saveVo = new SaveVo(index, songVo, lyricVo);
+                    songResult = new ResultVo<SaveVo>(saveVo);
+                    LocalSongCacheService.SaveCache(settingBean, searchSourcePair.Key, songId, saveVo);
                 }
                 catch (WebException ex)
                 {
@@ -130,7 +155,7 @@ public class SearchService(SettingBean settingBean) : ISearchService
                     songResult = ResultVo<SaveVo>.Failure(ex.Message);
                 }
 
-                resultDict.Add(songId, songResult);
+                resultDict[songId] = songResult;
             }
         }
 

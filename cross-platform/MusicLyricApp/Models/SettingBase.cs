@@ -86,6 +86,21 @@ public class ConfigBean
     public string LastSaveFolderPath = "";
 
     /// <summary>
+    /// 保存歌词时是否同时下载封面与直链音频
+    /// </summary>
+    public bool DownloadCoverAndSongLinkOnSave = false;
+
+    /// <summary>
+    /// 本地搜索缓存目录
+    /// </summary>
+    public string SearchCacheFolderPath = "";
+
+    /// <summary>
+    /// 本地搜索缓存最大大小（MB）
+    /// </summary>
+    public int SearchCacheMaxSizeMb = 128;
+
+    /// <summary>
     /// 输出的歌词类型列表
     /// </summary>
     public string OutputLyricTypes = string.Join(",", [(int)LyricsTypeEnum.ORIGIN, (int)LyricsTypeEnum.ORIGIN_TRANS]);

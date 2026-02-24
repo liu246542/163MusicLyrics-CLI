@@ -7,202 +7,266 @@
              x:Class="MusicLyricApp.Views.SettingView"
              x:DataType="viewModels:SettingViewModel">
 
-    <ScrollViewer>
-        <StackPanel Margin="10" Spacing="6">
-            <!-- 歌词设置 -->
-            <Expander Header="歌词设置" HorizontalAlignment="Stretch">
-                <StackPanel Spacing="8">
-                    <WrapPanel>
-                        <TextBlock Text="中文处理：" Width="60" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding SettingParamViewModel.ChineseProcessRules}"
-                                  SelectedItem="{Binding SettingParamViewModel.SelectedChineseProcessRuleItem}"
-                                  Width="120" Margin="0,0,8,8" />
-                        
-                        <TextBlock Text="逐字歌词：" Width="60" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding SettingParamViewModel.VerbatimLyricMode}"
-                                  SelectedItem="{Binding SettingParamViewModel.SelectedVerbatimLyricModeItem}"
-                                  Width="120" Margin="0,0,8,8" />
-                        
-                        <CheckBox Content="跳过空白歌词行"
-                                  IsChecked="{Binding SettingParamViewModel.IgnoreEmptyLyric, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  Margin="0,0,8,8" />
-                    </WrapPanel>
-                    
-                    <WrapPanel>
-                        <TextBlock Text="译文缺省规则：" Width="100" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding SettingParamViewModel.TransLyricLostRules}"
-                                  SelectedItem="{Binding SettingParamViewModel.SelectedTransLyricLostRuleItem}"
-                                  Width="120" Margin="0,0,8,8" />
-                        
-                        <TextBlock Text="译文匹配精度：" Width="100" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <TextBox
-                            Text="{Binding SettingParamViewModel.MatchPrecisionDeviation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            Width="50" Margin="0,0,8,8" />
-                        <TextBlock Text="MS" Margin="0,0,8,8" VerticalAlignment="Center" />
-                    </WrapPanel>
+    <UserControl.Styles>
+        <Style Selector="Button">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
 
-                    <WrapPanel>
-                        <TextBlock Text="歌词合并符：" Width="100" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <TextBox
-                            Text="{Binding SettingParamViewModel.LrcMergeSeparator, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            Width="120" Margin="0,0,8,8" />
-                    </WrapPanel>
-                    
-                    <TextBlock Text="百度翻译 APP ID：" />
-                    <TextBox
-                        Text="{Binding SettingParamViewModel.BaiduAppId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        Margin="0,0,8,8" />
-                    
-                    <TextBlock Text="百度翻译密钥：" />
-                    <TextBox
-                        Text="{Binding SettingParamViewModel.BaiduSecret, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        Margin="0,0,8,8" />
-                    
-                    <TextBlock Text="彩云小译 Token：" />
-                    <TextBox
-                        Text="{Binding SettingParamViewModel.CaiYunToken, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        Margin="0,0,8,8" />
-                </StackPanel>
-            </Expander>
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10" Margin="12">
+        <Border Grid.Row="0"
+                Padding="12,10"
+                BorderBrush="#D0D7DE"
+                BorderThickness="1"
+                CornerRadius="8"
+                Background="#F8FAFC">
+            <StackPanel Spacing="2">
+                <TextBlock Text="统一管理歌词处理、输出保存与应用行为配置" Foreground="#667085" />
+            </StackPanel>
+        </Border>
 
-            <!-- 歌词时间戳设置 -->
-            <Expander HorizontalAlignment="Stretch">
-                <Expander.Header>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
-                        <TextBlock Text="时间标签" VerticalAlignment="Center" />
-                        <Button Width="20" Height="20" Padding="0" Background="Transparent" BorderBrush="Transparent"
-                                ToolTip.Tip="获取帮助提示" Command="{Binding TimestampTipsCommand}">
-                            <TextBlock Text="?" FontWeight="Bold" Foreground="Gray" HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
-                        </Button>
+        <TabControl Grid.Row="1" TabStripPlacement="Top">
+            <TabItem Header="歌词定制">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="10" Margin="10">
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="中文处理" VerticalAlignment="Center" />
+                                <ComboBox Grid.Row="0" Grid.Column="1"
+                                          ItemsSource="{Binding SettingParamViewModel.ChineseProcessRules}"
+                                          SelectedItem="{Binding SettingParamViewModel.SelectedChineseProcessRuleItem}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="逐字歌词" VerticalAlignment="Center" />
+                                <ComboBox Grid.Row="1" Grid.Column="1"
+                                          ItemsSource="{Binding SettingParamViewModel.VerbatimLyricMode}"
+                                          SelectedItem="{Binding SettingParamViewModel.SelectedVerbatimLyricModeItem}" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="译文缺省规则" VerticalAlignment="Center" />
+                                <ComboBox Grid.Row="2" Grid.Column="1"
+                                          ItemsSource="{Binding SettingParamViewModel.TransLyricLostRules}"
+                                          SelectedItem="{Binding SettingParamViewModel.SelectedTransLyricLostRuleItem}" />
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="译文匹配精度(ms)" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="3" Grid.Column="1"
+                                         Text="{Binding SettingParamViewModel.MatchPrecisionDeviation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="歌词合并符" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="4" Grid.Column="1"
+                                         Text="{Binding SettingParamViewModel.LrcMergeSeparator, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <CheckBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+                                          Content="跳过空白歌词行"
+                                          IsChecked="{Binding SettingParamViewModel.IgnoreEmptyLyric, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+                        </Border>
+
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="时间标签格式设置" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <Button Width="22" Height="22" Padding="0" Content="?" Command="{Binding TimestampTipsCommand}" />
+                                </StackPanel>
+                                <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="LRC 时间戳" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="0" Grid.Column="1"
+                                             Text="{Binding SettingParamViewModel.LrcTimestampFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="SRT 时间戳" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="1" Grid.Column="1"
+                                             Text="{Binding SettingParamViewModel.SrtTimestampFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="毫秒截位规则" VerticalAlignment="Center" />
+                                    <ComboBox Grid.Row="2" Grid.Column="1"
+                                              ItemsSource="{Binding SettingParamViewModel.DotTypes}"
+                                              SelectedItem="{Binding SettingParamViewModel.SelectedDotTypeItem}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="歌词类型优先级（右键可上移/下移）" FontWeight="SemiBold" />
+                                <DataGrid ItemsSource="{Binding LyricsTypes}"
+                                          AutoGenerateColumns="False"
+                                          SelectionMode="Single"
+                                          SelectedItem="{Binding SelectedLyricsTypeItem, Mode=TwoWay}"
+                                          CanUserReorderColumns="False"
+                                          BorderThickness="1"
+                                          Height="260">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="启用" Width="80" CanUserSort="False">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="歌词类型" Binding="{Binding Name}" Width="*" CanUserSort="False" />
+                                    </DataGrid.Columns>
+                                    <DataGrid.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="上移" Command="{Binding MoveUpCommand}" />
+                                            <MenuItem Header="下移" Command="{Binding MoveDownCommand}" />
+                                        </ContextMenu>
+                                    </DataGrid.ContextMenu>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
-                </Expander.Header>
+                </ScrollViewer>
+            </TabItem>
 
-                <StackPanel Spacing="3">
-                    <WrapPanel>
-                        <TextBlock Text="LRC 时间戳：" Width="120" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <TextBox
-                            Text="{Binding SettingParamViewModel.LrcTimestampFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            Width="200" Margin="0,0,8,8" />
-                    </WrapPanel>
-                    <WrapPanel>
-                        <TextBlock Text="SRT 时间戳：" Width="120" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <TextBox
-                            Text="{Binding SettingParamViewModel.SrtTimestampFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            Width="200" Margin="0,0,8,8" />
-                    </WrapPanel>
-                    <WrapPanel>
-                        <TextBlock Text="毫秒截位规则：" Width="120" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding SettingParamViewModel.DotTypes}"
-                                  SelectedItem="{Binding SettingParamViewModel.SelectedDotTypeItem}"
-                                  Width="200" Margin="0,0,8,8" />
-                    </WrapPanel>
-                </StackPanel>
-            </Expander>
+            <TabItem Header="扩展">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="10" Margin="10">
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="140,*" ColumnSpacing="10" RowSpacing="8">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="百度翻译 APP ID" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="0" Grid.Column="1"
+                                         Text="{Binding SettingParamViewModel.BaiduAppId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="百度翻译密钥" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="1" Grid.Column="1"
+                                         Text="{Binding SettingParamViewModel.BaiduSecret, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="彩云小译 Token" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="2" Grid.Column="1"
+                                         Text="{Binding SettingParamViewModel.CaiYunToken, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+                        </Border>
 
-            <!-- 输出设置 -->
-            <Expander HorizontalAlignment="Stretch">
-                <Expander.Header>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
-                        <TextBlock Text="输出设置" VerticalAlignment="Center" />
-                        <Button Width="20" Height="20" Padding="0" Background="Transparent" BorderBrush="Transparent"
-                                ToolTip.Tip="获取帮助提示" Command="{Binding OutputTipsCommand}">
-                            <TextBlock Text="?" FontWeight="Bold" Foreground="Gray" HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
-                        </Button>
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="140,*" ColumnSpacing="10" RowSpacing="8">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="网易云 Cookie" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="0" Grid.Column="1"
+                                         Text="{Binding SettingParamViewModel.NetEaseCookie, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="QQ音乐 Cookie" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="1" Grid.Column="1"
+                                         Text="{Binding SettingParamViewModel.QqMusicCookie, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+                        </Border>
                     </StackPanel>
-                </Expander.Header>
+                </ScrollViewer>
+            </TabItem>
 
-                <StackPanel Spacing="4">
-                    <WrapPanel>
-                        <CheckBox Content="跳过纯音乐"
-                                  IsChecked="{Binding SettingParamViewModel.IgnorePureMusicInSave, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  Margin="0,0,8,8" />
-                        
-                        <CheckBox Content="“独立”歌词分文件保存"
-                                  IsChecked="{Binding SettingParamViewModel.SeparateFileForIsolated, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  Margin="0,0,8,8" />
+            <TabItem Header="下载与缓存">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="10" Margin="10">
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="下载与缓存行为" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <Button Width="22" Height="22" Padding="0" Content="?" Command="{Binding OutputTipsCommand}" />
+                                </StackPanel>
+                                <TextBlock Text="控制歌词保存时的附加下载和命名规则" Foreground="#667085" />
+                                <Border Height="1" Background="#EAECF0" Margin="0,2,0,2" />
+                                <WrapPanel>
+                                    <CheckBox Content="跳过纯音乐"
+                                              IsChecked="{Binding SettingParamViewModel.IgnorePureMusicInSave, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Margin="0,0,12,8" />
+                                    <CheckBox Content="“独立”歌词分文件保存"
+                                              IsChecked="{Binding SettingParamViewModel.SeparateFileForIsolated, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Margin="0,0,12,8" />
+                                    <CheckBox Content="同时下载封面和直链"
+                                              IsChecked="{Binding SettingParamViewModel.DownloadCoverAndSongLinkOnSave, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Margin="0,0,12,8" />
+                                </WrapPanel>
+                                <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="歌手分隔符" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="0" Grid.Column="1"
+                                             Text="{Binding SettingParamViewModel.SingerSeparator, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="保存文件名" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="1" Grid.Column="1"
+                                             Text="{Binding SettingParamViewModel.OutputFileNameFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
 
-                        <TextBlock Text="歌手分隔符：" Width="100" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <TextBox
-                            Text="{Binding SettingParamViewModel.SingerSeparator, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            Width="50" Margin="0,0,8,8" />
-                    </WrapPanel>
-                    
-                    <DataGrid ItemsSource="{Binding LyricsTypes}"
-                              AutoGenerateColumns="False"
-                              SelectionMode="Single"
-                              SelectedItem="{Binding SelectedLyricsTypeItem, Mode=TwoWay}"
-                              CanUserReorderColumns="False"
-                              Margin="0,0,8,8"
-                              BorderThickness="1">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="启用" Width="80" CanUserSort="False">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox IsChecked="{Binding IsSelected}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="保存路径" FontWeight="SemiBold" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding SettingParamViewModel.SaveFolderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button Grid.Column="1"
+                                            Content="选择"
+                                            Width="80"
+                                            Background="#F2F4F7"
+                                            Command="{Binding SelectSaveFolderCommand}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
 
-                            <DataGridTextColumn Header="歌词类型" Binding="{Binding Name}" Width="*" CanUserSort="False" />
-                        </DataGrid.Columns>
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="本地搜索缓存" FontWeight="SemiBold" />
+                                <Grid ColumnDefinitions="140,*,Auto,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="8">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="缓存目录" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="0" Grid.Column="1"
+                                             Text="{Binding SettingParamViewModel.SearchCacheFolderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button Grid.Row="0" Grid.Column="2"
+                                            Content="更改目录"
+                                            Width="90"
+                                            Background="#F2F4F7"
+                                            Command="{Binding SelectSearchCacheFolderCommand}" />
+                                    <Button Grid.Row="0" Grid.Column="3"
+                                            Content="打开目录"
+                                            Width="90"
+                                            Background="#F2F4F7"
+                                            Command="{Binding OpenSearchCachePathCommand}" />
 
-                        <DataGrid.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="上移" Command="{Binding MoveUpCommand}" />
-                                <MenuItem Header="下移" Command="{Binding MoveDownCommand}" />
-                            </ContextMenu>
-                        </DataGrid.ContextMenu>
-                    </DataGrid>
-
-                    <TextBlock Text="保存文件名：" Margin="0,0,8,8" VerticalAlignment="Center" />
-                    <TextBox
-                        Text="{Binding SettingParamViewModel.OutputFileNameFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        Margin="0,0,8,8" />
-                </StackPanel>
-            </Expander>
-            
-            <!-- 应用设置 -->
-            <Expander Header="应用设置" HorizontalAlignment="Stretch">
-                <StackPanel Spacing="6">
-                    <WrapPanel>
-                        <CheckBox Content="聚合模糊搜索"
-                                  IsChecked="{Binding SettingParamViewModel.AggregatedBlurSearch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  Margin="0,0,8,8" />
-                        <CheckBox Content="自动读取剪贴板"
-                                  IsChecked="{Binding SettingParamViewModel.AutoReadClipboard, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  Margin="0,0,8,8" />
-                        <CheckBox Content="自动检查更新"
-                                  IsChecked="{Binding SettingParamViewModel.AutoCheckUpdate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  Margin="0,0,8,8" />
-                        <TextBlock Text="主题：" Margin="0,0,8,8" VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding SettingParamViewModel.ThemeModeRules}"
-                                  SelectedItem="{Binding SettingParamViewModel.SelectedThemeModeRuleItem}"
-                                  Width="110" Margin="0,0,8,8" />
-                    </WrapPanel>
-
-                    <TextBlock Text="网易云 Cookie：" Margin="0,0,8,8" VerticalAlignment="Center" />
-                    <TextBox
-                        Text="{Binding SettingParamViewModel.NetEaseCookie, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        Margin="0,0,8,8" />
-
-                    <TextBlock Text="QQ音乐 Cookie：" Margin="0,0,8,8" VerticalAlignment="Center" />
-                    <TextBox
-                        Text="{Binding SettingParamViewModel.QqMusicCookie, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        Margin="0,0,8,8" />
-                    
-                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
-                        <TextBlock Text="配置文件：" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding ConfigPath}" IsReadOnly="True"  Width="400" VerticalAlignment="Center"/>
-                        <Button Content="打开" Width="50" Command="{Binding OpenConfigPathCommand}" 
-                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="最大缓存(MB)" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="1" Grid.Column="1"
+                                             Width="120"
+                                             HorizontalAlignment="Left"
+                                             Text="{Binding SettingParamViewModel.SearchCacheMaxSizeMbText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2"
+                                               VerticalAlignment="Center"
+                                               Foreground="IndianRed"
+                                               Text="{Binding SettingParamViewModel.SearchCacheSizeError}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
-                </StackPanel>
-            </Expander>
+                </ScrollViewer>
+            </TabItem>
 
-            <!-- 提示区域 -->
-            <TextBox Text="{Binding SettingTips}" IsReadOnly="True" AcceptsReturn="True" Height="200" />
-        </StackPanel>
-    </ScrollViewer>
+            <TabItem Header="应用设置">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="10" Margin="10">
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <StackPanel Spacing="8">
+                                <WrapPanel>
+                                    <CheckBox Content="聚合模糊搜索"
+                                              IsChecked="{Binding SettingParamViewModel.AggregatedBlurSearch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Margin="0,0,12,8" />
+                                    <CheckBox Content="自动读取剪贴板"
+                                              IsChecked="{Binding SettingParamViewModel.AutoReadClipboard, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Margin="0,0,12,8" />
+                                    <CheckBox Content="自动检查更新"
+                                              IsChecked="{Binding SettingParamViewModel.AutoCheckUpdate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Margin="0,0,12,8" />
+                                </WrapPanel>
+                                <Grid ColumnDefinitions="140,*" ColumnSpacing="10">
+                                    <TextBlock Grid.Column="0" Text="主题模式" VerticalAlignment="Center" />
+                                    <ComboBox Grid.Column="1"
+                                              ItemsSource="{Binding SettingParamViewModel.ThemeModeRules}"
+                                              SelectedItem="{Binding SettingParamViewModel.SelectedThemeModeRuleItem}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Padding="12" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="8" Background="#FFFFFF">
+                            <Grid ColumnDefinitions="140,*,Auto" ColumnSpacing="10">
+                                <TextBlock Grid.Column="0" Text="配置文件" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" Text="{Binding ConfigPath}" IsReadOnly="True" VerticalAlignment="Center" />
+                                <Button Grid.Column="2" Content="打开" Width="70" Command="{Binding OpenConfigPathCommand}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <Border Grid.Row="2" Padding="8" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="6" Background="#FAFBFC">
+            <TextBox Text="{Binding SettingTips}" IsReadOnly="True" AcceptsReturn="True" Height="120" BorderThickness="0" Background="Transparent" />
+        </Border>
+    </Grid>
 </UserControl>

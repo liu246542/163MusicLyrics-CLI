@@ -27,15 +27,19 @@ public class StorageService : IStorageService
 
     public SettingBean ReadAppConfig()
     {
+        SettingBean setting;
         if (File.Exists(Constants.GetConfigFilePath()))
         {
             var text = File.ReadAllText(Constants.GetConfigFilePath());
-            return text.ToEntity<SettingBean>();
+            setting = text.ToEntity<SettingBean>();
         }
         else
         {
-            return new SettingBean();
+            setting = new SettingBean();
         }
+
+        LocalSongCacheService.EnsureConfigDefaults(setting);
+        return setting;
     }
 
     public void SaveConfig(SettingBean settingBean)
@@ -207,6 +211,7 @@ public class StorageService : IStorageService
         }
 
         await WriteToFile(await ResolveSaveFolderAsync(settingBean, windowProvider), saveVo, settingBean);
+        await DownloadExtraResourcesIfEnabled(saveVo, settingBean, windowProvider);
 
         return string.Format(ErrorMsgConst.SAVE_COMPLETE, 1, 0);
     }
@@ -232,6 +237,7 @@ public class StorageService : IStorageService
             else
             {
                 await WriteToFile(folder, saveVo, settingBean);
+                await DownloadExtraResourcesIfEnabled(saveVo, settingBean, folder);
                 successRes.Add(resKey);
             }
         }
@@ -239,6 +245,63 @@ public class StorageService : IStorageService
         searchResult.ResetConsoleOutput(RenderUtils.RenderStorageResult(skipRes, successRes));
 
         return string.Format(ErrorMsgConst.SAVE_COMPLETE, successRes.Count, skipRes.Count);
+    }
+
+    private async Task DownloadExtraResourcesIfEnabled(SaveVo saveVo, SettingBean settingBean, IWindowProvider windowProvider)
+    {
+        var folder = await ResolveSaveFolderAsync(settingBean, windowProvider);
+        await DownloadExtraResourcesIfEnabled(saveVo, settingBean, folder);
+    }
+
+    private async Task DownloadExtraResourcesIfEnabled(SaveVo saveVo, SettingBean settingBean, IStorageFolder folder)
+    {
+        if (!settingBean.Config.DownloadCoverAndSongLinkOnSave || _searchService == null)
+        {
+            return;
+        }
+
+        var baseName = GlobalUtils.GetOutputName(saveVo, settingBean.Config.OutputFileNameFormat,
+            settingBean.Config.SingerSeparator);
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(saveVo.SongVo.Pics))
+            {
+                var ext = GetImageExt(saveVo.SongVo.Pics);
+                var file = await folder.CreateFileAsync($"{baseName}-cover.{ext}");
+                var bytes = await HttpClient.GetByteArrayAsync(saveVo.SongVo.Pics);
+                await using var stream = await file.OpenWriteAsync();
+                await stream.WriteAsync(bytes);
+                await stream.FlushAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "Download cover on save failed, songId={SongId}", saveVo.SongVo.DisplayId);
+        }
+
+        try
+        {
+            var musicApi = _searchService.GetMusicApi(saveVo.LyricVo.SearchSource);
+            var linkResult = await Task.Run(() => musicApi.GetSongLink(saveVo.SongVo.DisplayId));
+            if (!linkResult.IsSuccess() || string.IsNullOrWhiteSpace(linkResult.Data))
+            {
+                return;
+            }
+
+            using var resp = await HttpClient.GetAsync(linkResult.Data);
+            resp.EnsureSuccessStatusCode();
+            var ext = ResolveAudioExt(linkResult.Data, resp.Content.Headers.ContentType?.MediaType);
+            var file = await folder.CreateFileAsync($"{baseName}.{ext}");
+            await using var output = await file.OpenWriteAsync();
+            await using var input = await resp.Content.ReadAsStreamAsync();
+            await input.CopyToAsync(output);
+            await output.FlushAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "Download song link on save failed, songId={SongId}", saveVo.SongVo.DisplayId);
+        }
     }
 
     private static string IsSkipStorage(SaveVo saveVo, SettingBean settingBean)

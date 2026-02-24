@@ -78,6 +78,7 @@ public partial class BatchSearchViewModel : ViewModelBase
             {
                 var saveVo = result.Data;
                 _saveMap[input.SongId] = saveVo;
+                LocalSongCacheService.SaveCache(_settingBean, input.SearchSource, input.SongId, saveVo);
 
                 item.SongName = saveVo.SongVo.Name;
                 item.SongSource = GetSourceName(input.SearchSource);
@@ -316,7 +317,25 @@ public partial class BatchSearchViewModel : ViewModelBase
 
     public bool TryGetCachedSongLink(string songId, out string link)
     {
-        return _songLinkMap.TryGetValue(songId, out link!);
+        if (_songLinkMap.TryGetValue(songId, out link!))
+        {
+            return true;
+        }
+
+        var item = Items.FirstOrDefault(x => x.SongId == songId);
+        if (item == null)
+        {
+            link = string.Empty;
+            return false;
+        }
+
+        if (LocalSongCacheService.TryLoadSongLink(_settingBean, item.SourceEnum, songId, out link))
+        {
+            _songLinkMap[songId] = link;
+            return true;
+        }
+
+        return false;
     }
 
     public void CacheSongLink(string songId, string link)
@@ -327,6 +346,11 @@ public partial class BatchSearchViewModel : ViewModelBase
         }
 
         _songLinkMap[songId] = link;
+        var item = Items.FirstOrDefault(x => x.SongId == songId);
+        if (item != null)
+        {
+            LocalSongCacheService.UpdateSongLink(_settingBean, item.SourceEnum, songId, link);
+        }
     }
 
     public void SelectSongsByIds(IEnumerable<string> songIds)

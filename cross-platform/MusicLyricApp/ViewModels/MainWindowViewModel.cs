@@ -261,6 +261,7 @@ public partial class MainWindowViewModel : ViewModelBase
             }
 
             var result = _searchService.SearchSongs(SearchParamViewModel.SongIds, SettingBean);
+            var localCacheHitCount = _searchService.LastLocalCacheHitCount;
             LampVm.UpdateLampInfo(result, SettingBean);
             _downloadManagerViewModel.AddSearchResults(result, SearchParamViewModel.SongIds, SearchParamViewModel.SearchText);
 
@@ -285,6 +286,11 @@ public partial class MainWindowViewModel : ViewModelBase
                         _downloadManagerViewModel.CacheSongLink(SearchParamViewModel.SongIds[0].SongId, linkResult.Data);
                     }
                 });
+
+                if (localCacheHitCount > 0)
+                {
+                    SetTip("命中本地缓存", false);
+                }
             }
             else
             {
@@ -680,7 +686,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         // 创建新窗口
-        _settingWindow = new SettingWindow(SettingBean);
+        _settingWindow = new SettingWindow(SettingBean, _windowProvider);
         _settingWindow.Closed += (_, _) => 
         {
             if (_settingWindow.DataContext is SettingViewModel vm)

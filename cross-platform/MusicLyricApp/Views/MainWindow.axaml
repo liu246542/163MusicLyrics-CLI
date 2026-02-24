@@ -5,8 +5,8 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Resources/app-logo.ico"
         Title="{Binding AppTitle}"
-        Width="720"
-        Height="715"
+        Width="700"
+        Height="690"
         MinWidth="700"
         MinHeight="650">
 
@@ -59,7 +59,7 @@
 
                             <Button Grid.Column="7"
                                     Content="下载管理"
-                                    Width="110"
+                                    Width="90"
                                     Command="{Binding ExecuteOpenDownloadManagerCommand}" />
                         </Grid>
 
@@ -173,34 +173,21 @@
                          IsReadOnly="True" />
 
                 <Border Grid.Row="3" Padding="8" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="6">
-                    <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
-                        <WrapPanel ItemSpacing="8">
-                            <TextBlock Text="输出格式" VerticalAlignment="Center" />
-                            <ComboBox Width="120"
-                                      ItemsSource="{Binding SearchParamViewModel.OutputFormats}"
-                                      SelectedItem="{Binding SearchParamViewModel.SelectedOutputFormatItem}" />
+                    <WrapPanel ItemSpacing="8">
+                        <TextBlock Text="输出格式" VerticalAlignment="Center" />
+                        <ComboBox Width="120"
+                                  ItemsSource="{Binding SearchParamViewModel.OutputFormats}"
+                                  SelectedItem="{Binding SearchParamViewModel.SelectedOutputFormatItem}" />
 
-                            <TextBlock Text="文件编码" VerticalAlignment="Center" />
-                            <ComboBox Width="120"
-                                      ItemsSource="{Binding SearchParamViewModel.OutputEncodings}"
-                                      SelectedItem="{Binding SearchParamViewModel.SelectedOutputEncodingItem}" />
+                        <TextBlock Text="文件编码" VerticalAlignment="Center" />
+                        <ComboBox Width="120"
+                                  ItemsSource="{Binding SearchParamViewModel.OutputEncodings}"
+                                  SelectedItem="{Binding SearchParamViewModel.SelectedOutputEncodingItem}" />
 
-                            <Button Content="保存"
-                                    Width="150"
-                                    Command="{Binding ExecuteSaveCommand}" />
-                        </WrapPanel>
-
-                        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                            <TextBlock Text="保存路径" VerticalAlignment="Center" />
-                            <TextBox Grid.Column="1"
-                                     Text="{Binding LastSaveFolderPath, Mode=TwoWay}"
-                                     IsReadOnly="True" />
-                            <Button Grid.Column="2"
-                                    Content="选择"
-                                    Width="70"
-                                    Command="{Binding ExecuteSelectOutputFolderCommand}" />
-                        </Grid>
-                    </Grid>
+                        <Button Content="保存"
+                                Width="150"
+                                Command="{Binding ExecuteSaveCommand}" />
+                    </WrapPanel>
                 </Border>
 
                 <Border Grid.Row="4" Padding="8" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="6" Background="#FAFBFC">

@@ -3,9 +3,12 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Avalonia.Platform.Storage;
 using MusicLyricApp.Core;
+using MusicLyricApp.Core.Service;
 using MusicLyricApp.Models;
 using NLog;
 
@@ -24,12 +27,16 @@ public partial class SettingViewModel : ViewModelBase
     public SettingParamViewModel SettingParamViewModel { get; } = new();
 
     private readonly SettingBean _settingBean;
+    private readonly IWindowProvider? _windowProvider;
+    private readonly StorageService _storageService = new();
     
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public SettingViewModel(SettingBean settingBean)
+    public SettingViewModel(SettingBean settingBean, IWindowProvider? windowProvider = null)
     {
         _settingBean = settingBean;
+        _windowProvider = windowProvider;
+        LocalSongCacheService.EnsureConfigDefaults(_settingBean);
         SettingParamViewModel.Bind(_settingBean);
 
         InitLyricsTypes();
@@ -91,6 +98,7 @@ public partial class SettingViewModel : ViewModelBase
 
     public void OnClosing()
     {
+        LocalSongCacheService.EnsureConfigDefaults(_settingBean);
         _settingBean.Config.OutputLyricTypes = string.Join(",", LyricsTypes
             .Where(x => x.IsSelected)
             .Select(x => x.Id));
@@ -127,6 +135,75 @@ public partial class SettingViewModel : ViewModelBase
         catch (Exception ex)
         {
             Logger.Error(ex, "OpenConfigPath error");
+            throw new MusicLyricException(ErrorMsgConst.STORAGE_FOLDER_ERROR);
+        }
+    }
+
+    [RelayCommand]
+    private async Task SelectSaveFolderAsync()
+    {
+        if (_windowProvider == null)
+        {
+            return;
+        }
+
+        var folder = await _storageService.SelectFolderAndRememberAsync(_settingBean, _windowProvider);
+        var localPath = folder.Path?.LocalPath ?? folder.Path?.ToString() ?? "";
+        SettingParamViewModel.SaveFolderPath = localPath;
+        SettingTips = $"已更新保存路径：{localPath}";
+    }
+
+    [RelayCommand]
+    private async Task SelectSearchCacheFolderAsync()
+    {
+        if (_windowProvider == null)
+        {
+            return;
+        }
+
+        var folders = await _windowProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "选择搜索缓存目录",
+            AllowMultiple = false
+        });
+
+        if (folders.Count == 0)
+        {
+            return;
+        }
+
+        var path = folders[0].Path?.LocalPath ?? folders[0].Path?.ToString();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        SettingParamViewModel.SearchCacheFolderPath = path;
+        _storageService.SaveConfig(_settingBean);
+        SettingTips = $"已更新缓存目录：{path}";
+    }
+
+    [RelayCommand]
+    private void OpenSearchCachePath()
+    {
+        var path = SettingParamViewModel.SearchCacheFolderPath;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(path);
+            using var _ = Process.Start(new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "OpenSearchCachePath error");
             throw new MusicLyricException(ErrorMsgConst.STORAGE_FOLDER_ERROR);
         }
     }

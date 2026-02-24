@@ -219,6 +219,54 @@ public partial class SettingParamViewModel : ViewModelBase
     {
         _settingBean.Param.LrcMergeSeparator = value;
     }
+
+    // 23. 保存路径
+    [ObservableProperty] private string _saveFolderPath;
+
+    partial void OnSaveFolderPathChanged(string value)
+    {
+        _settingBean.Config.LastSaveFolderPath = value;
+    }
+
+    // 24. 保存歌词时下载封面与直链
+    [ObservableProperty] private bool _downloadCoverAndSongLinkOnSave;
+
+    partial void OnDownloadCoverAndSongLinkOnSaveChanged(bool value)
+    {
+        _settingBean.Config.DownloadCoverAndSongLinkOnSave = value;
+    }
+
+    // 25. 搜索缓存目录
+    [ObservableProperty] private string _searchCacheFolderPath;
+
+    partial void OnSearchCacheFolderPathChanged(string value)
+    {
+        _settingBean.Config.SearchCacheFolderPath = value;
+    }
+
+    // 26. 搜索缓存最大占用（MB）输入文本
+    [ObservableProperty] private string _searchCacheMaxSizeMbText;
+
+    // 27. 搜索缓存大小输入错误提示
+    [ObservableProperty] private string _searchCacheSizeError;
+
+    partial void OnSearchCacheMaxSizeMbTextChanged(string value)
+    {
+        if (!int.TryParse(value, out var size))
+        {
+            SearchCacheSizeError = "请输入有效数字（1-2048）";
+            return;
+        }
+
+        if (size < 1 || size > 2048)
+        {
+            SearchCacheSizeError = "缓存大小范围为 1 - 2048 MB";
+            return;
+        }
+
+        SearchCacheSizeError = string.Empty;
+        _settingBean.Config.SearchCacheMaxSizeMb = size;
+    }
     
     private SettingBean _settingBean;
 
@@ -248,5 +296,10 @@ public partial class SettingParamViewModel : ViewModelBase
         NetEaseCookie = _settingBean.Config.NetEaseCookie;
         SingerSeparator = _settingBean.Config.SingerSeparator;
         LrcMergeSeparator = _settingBean.Param.LrcMergeSeparator;
+        SaveFolderPath = _settingBean.Config.LastSaveFolderPath;
+        DownloadCoverAndSongLinkOnSave = _settingBean.Config.DownloadCoverAndSongLinkOnSave;
+        SearchCacheFolderPath = _settingBean.Config.SearchCacheFolderPath;
+        SearchCacheMaxSizeMbText = (_settingBean.Config.SearchCacheMaxSizeMb <= 0 ? 128 : _settingBean.Config.SearchCacheMaxSizeMb).ToString();
+        SearchCacheSizeError = string.Empty;
     }
 }
