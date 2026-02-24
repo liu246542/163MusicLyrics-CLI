@@ -46,6 +46,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private double _playbackDurationSeconds;
 
     public string PlaybackProgressText => $"{FormatPlaybackTime(PlaybackPositionSeconds)} / {FormatPlaybackTime(PlaybackDurationSeconds)}";
+    public string TipFullMessage => $"{(!string.IsNullOrWhiteSpace(TipErrorMessage) ? TipErrorMessage : TipNormalMessage)}";
 
     private readonly SearchService _searchService;
 
@@ -311,12 +312,14 @@ public partial class MainWindowViewModel : ViewModelBase
                 // 自动获取直链
                 await Task.Run(() =>
                 {
-                    var musicApi = _searchService.GetMusicApi(SettingBean.Param.SearchSource);
-                    var linkResult = musicApi.GetSongLink(SearchParamViewModel.SongIds[0].SongId);
+                    var songId0 = SearchParamViewModel.SongIds[0];
+                    
+                    var musicApi = _searchService.GetMusicApi(songId0.SearchSource);
+                    var linkResult = musicApi.GetSongLink(songId0.SongId);
                     if (linkResult.IsSuccess())
                     {
                         SearchResultViewModel.SongLink = linkResult.Data;
-                        _downloadManagerViewModel.CacheSongLink(SearchParamViewModel.SongIds[0].SongId, linkResult.Data);
+                        _downloadManagerViewModel.CacheSongLink(songId0.SongId, linkResult.Data);
                     }
                 });
 
@@ -832,6 +835,21 @@ public partial class MainWindowViewModel : ViewModelBase
         TipTimestamp = DateTime.Now.ToString("HH:mm:ss");
         TipNormalMessage = isError ? "" : message;
         TipErrorMessage = isError ? message : "";
+    }
+
+    partial void OnTipTimestampChanged(string value)
+    {
+        OnPropertyChanged(nameof(TipFullMessage));
+    }
+
+    partial void OnTipNormalMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(TipFullMessage));
+    }
+
+    partial void OnTipErrorMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(TipFullMessage));
     }
 
     [RelayCommand]

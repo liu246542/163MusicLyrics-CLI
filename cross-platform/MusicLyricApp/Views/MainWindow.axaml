@@ -198,7 +198,9 @@
                                  Width="18"
                                  Height="18"
                                  VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1" TextTrimming="CharacterEllipsis">
+                        <TextBlock Grid.Column="1"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip.Tip="{Binding TipFullMessage}">
                             <Run Text="【提示】 " Foreground="#344054" />
                             <Run Text="[" Foreground="#98A2B3" />
                             <Run Text="{Binding TipTimestamp}" Foreground="#98A2B3" />
