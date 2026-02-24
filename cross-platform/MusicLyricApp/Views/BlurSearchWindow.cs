@@ -7,18 +7,28 @@ namespace MusicLyricApp.Views;
 
 public class BlurSearchWindow : Window
 {
+    private BlurSearchViewModel? _viewModel;
+
     public BlurSearchWindow(List<SearchResultVo> searchResList)
     {
         Title = "搜索结果";
         Width = 1400;
         Height = 700;
-
-        var viewModel = new BlurSearchViewModel(searchResList);
-        
-        DataContext = viewModel;
-        Content = new BlurSearchView(viewModel);
         Icon = Constants.GetIcon("search-result");
-        
-        viewModel.LoadTypeAResults();
+
+        UpdateResults(searchResList);
+    }
+
+    public void UpdateResults(List<SearchResultVo> searchResList)
+    {
+        _viewModel = new BlurSearchViewModel(searchResList);
+        var view = new BlurSearchView(_viewModel)
+        {
+            DataContext = _viewModel
+        };
+
+        DataContext = _viewModel;
+        Content = view;
+        _viewModel.LoadTypeAResults();
     }
 }

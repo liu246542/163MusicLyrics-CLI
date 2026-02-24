@@ -372,6 +372,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 }
                 else
                 {
+                    _blurSearchWindow.UpdateResults(resultVos);
+
                     // 窗口还在：如果最小化，恢复正常；否则激活
                     if (_blurSearchWindow.WindowState == WindowState.Minimized)
                     {
@@ -379,6 +381,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     }
 
                     _blurSearchWindow.Activate();
+                    SetTip($"模糊搜索成功，共 {resultVos.Count} 组结果。", false);
                     return;
                 }
             }

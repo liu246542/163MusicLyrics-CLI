@@ -63,14 +63,21 @@
                 <DataGridTextColumn Header="歌曲名" Binding="{Binding SongName}" Width="*" />
                 <DataGridTextColumn Header="歌手" Binding="{Binding Singer}" Width="180" />
                 <DataGridTextColumn Header="专辑" Binding="{Binding Album}" Width="200" />
-                <DataGridTemplateColumn Header="状态" Width="220" CanUserSort="False">
+                <DataGridTemplateColumn Header="状态" Width="120" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="{Binding Status}" />
-                                <TextBlock Text="{Binding Error}" Foreground="#B42318" />
-                                <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" Height="14" />
-                            </StackPanel>
+                            <TextBlock Text="{Binding Status}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="备注" Width="260" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Error}"
+                                       Foreground="#B42318"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="{Binding Error}"
+                                       VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
