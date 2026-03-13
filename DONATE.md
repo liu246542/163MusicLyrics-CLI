@@ -7,6 +7,18 @@ maintained personally, all features are free. If you would like to treat the cre
 
 | username     | donate    | platform | date       |
 |:-------------|:----------|:-------|:-----------|
+| * 罗  | 2 CNY     | wechat | 2026-02-27 |
+| 河虾茛  | 15 CNY     | alipay | 2026-02-02 |
+| * 果  | 50 CNY     | wechat | 2026-01-31 |
+| * 蓝  | 6.66 CNY     | wechat | 2026-01-25 |
+| 云 *）   | 10 CNY     | wechat | 2025-12-22 |
+| * 霁   | 3.33 CNY     | wechat | 2025-12-01 |
+| 感谢有你   | 20 CNY     | wechat | 2025-11-30 |
+| 陈  | 2 CNY     | alipay | 2025-11-25 |
+| 限定温柔、  | 20 CNY     | alipay | 2025-11-19 |
+| * 月   | 20 CNY     | wechat | 2025-10-03 |
+| dfgger   | 11.45 CNY     | wechat | 2025-09-06 |
+| paizhang   | 66.6 CNY     | alipay | 2025-09-04 |
 | 晓风雅月   | 6.66 CNY     | wechat | 2025-06-18 |
 | *🧙   | 9 CNY     | wechat | 2025-06-17 |
 | C*n   | 5 CNY     | wechat | 2025-06-12 |
