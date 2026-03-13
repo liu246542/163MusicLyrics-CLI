@@ -13,6 +13,14 @@ public partial class SearchResultViewModel : ViewModelBase
 
     [ObservableProperty] private string _album;
     
+    [ObservableProperty] private string _songLink;
+
+    [ObservableProperty] private string _songDuration;
+
+    [ObservableProperty] private string _publishDate;
+
+    [ObservableProperty] private string _songSource;
+    
     [ObservableProperty] private string _consoleOutput;
     
     [ObservableProperty] private Dictionary<string, SaveVo> _saveVoMap = new();
@@ -22,6 +30,10 @@ public partial class SearchResultViewModel : ViewModelBase
         Singer = "";
         SongName = "";
         Album = "";
+        SongLink = "";
+        SongDuration = "";
+        PublishDate = "";
+        SongSource = "";
         ConsoleOutput = consoleOutput;
     }
 }

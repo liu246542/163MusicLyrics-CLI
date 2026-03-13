@@ -1,8 +1,26 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace MusicLyricApp.Models;
+
+public enum NetworkProxyModeEnum
+{
+    SYSTEM_PROXY = 0,
+    DIRECT_CONNECT = 1,
+    HTTP_PROXY = 2
+}
+
+
+public enum FileConflictStrategyEnum
+{
+    [Description("覆盖同名文件")]
+    OVERWRITE = 0,
+
+    [Description("自动追加编号")]
+    APPEND_NUMBER = 1
+}
 
 public class SettingBean
 {
@@ -51,6 +69,11 @@ public class ConfigBean
     public string SingerSeparator = ",";
 
     /// <summary>
+    /// 文件名歌手数量上限（-1 表示不截断）
+    /// </summary>
+    public int SingerCountLimit = -1;
+
+    /// <summary>
     /// 聚合模糊搜索
     /// </summary>
     public bool AggregatedBlurSearch = false;
@@ -66,6 +89,11 @@ public class ConfigBean
     public bool AutoCheckUpdate = true;
 
     /// <summary>
+    /// 关闭主窗口时是否二次确认
+    /// </summary>
+    public bool ConfirmBeforeExit = true;
+
+    /// <summary>
     /// 保存时跳过纯音乐
     /// </summary>
     public bool IgnorePureMusicInSave = true;
@@ -79,6 +107,61 @@ public class ConfigBean
     /// 输出文件名格式
     /// </summary>
     public string OutputFileNameFormat = "${name} - ${singer}";
+
+    /// <summary>
+    /// 同名文件处理策略
+    /// </summary>
+    public FileConflictStrategyEnum FileConflictStrategy = FileConflictStrategyEnum.OVERWRITE;
+
+    /// <summary>
+    /// 同名文件追加后缀模板，使用 {n} 代表序号
+    /// </summary>
+    public string FileConflictSuffixPattern = " ({n})";
+
+    /// <summary>
+    /// 最近一次保存目录
+    /// </summary>
+    public string LastSaveFolderPath = "";
+
+    /// <summary>
+    /// 保存歌词时是否同时下载封面与直链音频
+    /// </summary>
+    public bool DownloadCoverAndSongLinkOnSave = false;
+
+    /// <summary>
+    /// 本地搜索缓存目录
+    /// </summary>
+    public string SearchCacheFolderPath = "";
+
+    /// <summary>
+    /// 本地搜索缓存最大大小（MB）
+    /// </summary>
+    public int SearchCacheMaxSizeMb = 128;
+
+    /// <summary>
+    /// 代理模式
+    /// </summary>
+    public NetworkProxyModeEnum NetworkProxyMode = NetworkProxyModeEnum.SYSTEM_PROXY;
+
+    /// <summary>
+    /// HTTP 代理地址
+    /// </summary>
+    public string ProxyHost = "";
+
+    /// <summary>
+    /// HTTP 代理端口
+    /// </summary>
+    public int ProxyPort = 80;
+
+    /// <summary>
+    /// HTTP 代理用户名
+    /// </summary>
+    public string ProxyUsername = "";
+
+    /// <summary>
+    /// HTTP 代理密码
+    /// </summary>
+    public string ProxyPassword = "";
 
     /// <summary>
     /// 输出的歌词类型列表

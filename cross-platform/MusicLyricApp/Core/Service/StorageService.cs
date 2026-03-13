@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using MusicLyricApp.Core.Utils;
@@ -24,15 +27,24 @@ public class StorageService : IStorageService
 
     public SettingBean ReadAppConfig()
     {
+        SettingBean setting;
         if (File.Exists(Constants.GetConfigFilePath()))
         {
             var text = File.ReadAllText(Constants.GetConfigFilePath());
-            return text.ToEntity<SettingBean>();
+            setting = text.ToEntity<SettingBean>();
         }
         else
         {
-            return new SettingBean();
+            setting = new SettingBean();
         }
+
+        LocalSongCacheService.EnsureConfigDefaults(setting);
+        return setting;
+    }
+
+    private static HttpClient CreateHttpClient(int timeoutSeconds = 120)
+    {
+        return NetworkClientFactory.CreateHttpClient(timeoutSeconds);
     }
 
     public void SaveConfig(SettingBean settingBean)
@@ -130,7 +142,71 @@ public class StorageService : IStorageService
         }
     }
 
-    private static async Task<string> SaveSingleResult(SearchResultViewModel searchResult, SettingBean settingBean,
+    public async Task<string> DownloadSongLink(SearchResultViewModel searchResult, SettingBean settingBean,
+        IWindowProvider windowProvider)
+    {
+        if (searchResult.SaveVoMap.Count == 0)
+        {
+            throw new MusicLyricException(ErrorMsgConst.MUST_SEARCH_BEFORE_GET_SONG_URL);
+        }
+
+        var saveVo = searchResult.SaveVoMap.Values.First();
+        var link = searchResult.SongLink;
+        if (string.IsNullOrWhiteSpace(link))
+        {
+            var musicApi = _searchService.GetMusicApi(settingBean.Param.SearchSource);
+            var linkResult = musicApi.GetSongLink(saveVo.SongVo.DisplayId);
+            if (!linkResult.IsSuccess())
+            {
+                throw new MusicLyricException(linkResult.ErrorMsg);
+            }
+
+            link = linkResult.Data;
+        }
+
+        var folder = await ResolveSaveFolderAsync(settingBean, windowProvider);
+        using var client = CreateHttpClient();
+        using var resp = await client.GetAsync(link);
+        resp.EnsureSuccessStatusCode();
+
+        var ext = ResolveAudioExt(link, resp.Content.Headers.ContentType?.MediaType);
+        var file = await CreateOutputFileAsync(folder, $"{GetSafeFileStem(saveVo.SongVo.Name)}.{ext}", settingBean);
+        await using var output = await file.OpenWriteAsync();
+        await using var input = await resp.Content.ReadAsStreamAsync();
+        await input.CopyToAsync(output);
+        await output.FlushAsync();
+
+        return "歌曲音频已保存";
+    }
+
+    public async Task<string> DownloadSongPic(SearchResultViewModel searchResult, SettingBean settingBean,
+        IWindowProvider windowProvider)
+    {
+        if (searchResult.SaveVoMap.Count == 0)
+        {
+            throw new MusicLyricException(ErrorMsgConst.MUST_SEARCH_BEFORE_GET_SONG_PIC);
+        }
+
+        var saveVo = searchResult.SaveVoMap.Values.First();
+        if (string.IsNullOrWhiteSpace(saveVo.SongVo.Pics))
+        {
+            throw new MusicLyricException(ErrorMsgConst.SONG_PIC_GET_FAILED);
+        }
+
+        var folder = await ResolveSaveFolderAsync(settingBean, windowProvider);
+        var ext = GetImageExt(saveVo.SongVo.Pics);
+        var file = await CreateOutputFileAsync(folder, $"{GetSafeFileStem(saveVo.SongVo.Name)}-cover.{ext}", settingBean);
+
+        using var client = CreateHttpClient();
+        var bytes = await client.GetByteArrayAsync(saveVo.SongVo.Pics);
+        await using var stream = await file.OpenWriteAsync();
+        await stream.WriteAsync(bytes);
+        await stream.FlushAsync();
+
+        return "歌曲封面已保存";
+    }
+
+    private async Task<string> SaveSingleResult(SearchResultViewModel searchResult, SettingBean settingBean,
         IWindowProvider windowProvider)
     {
         var saveVo = searchResult.SaveVoMap.Values.First();
@@ -141,15 +217,16 @@ public class StorageService : IStorageService
             throw new MusicLyricException(preCheck);
         }
 
-        await WriteToFile(await SelectFolder(windowProvider), saveVo, settingBean);
+        await WriteToFile(await ResolveSaveFolderAsync(settingBean, windowProvider), saveVo, settingBean);
+        await DownloadExtraResourcesIfEnabled(saveVo, settingBean, windowProvider);
 
         return string.Format(ErrorMsgConst.SAVE_COMPLETE, 1, 0);
     }
 
-    private static async Task<string> SaveBatchResult(SearchResultViewModel searchResult, SettingBean settingBean,
+    private async Task<string> SaveBatchResult(SearchResultViewModel searchResult, SettingBean settingBean,
         IWindowProvider windowProvider)
     {
-        var folder = await SelectFolder(windowProvider);
+        var folder = await ResolveSaveFolderAsync(settingBean, windowProvider);
 
         var skipRes = new Dictionary<string, string>();
         var successRes = new HashSet<string>();
@@ -167,6 +244,7 @@ public class StorageService : IStorageService
             else
             {
                 await WriteToFile(folder, saveVo, settingBean);
+                await DownloadExtraResourcesIfEnabled(saveVo, settingBean, folder);
                 successRes.Add(resKey);
             }
         }
@@ -174,6 +252,65 @@ public class StorageService : IStorageService
         searchResult.ResetConsoleOutput(RenderUtils.RenderStorageResult(skipRes, successRes));
 
         return string.Format(ErrorMsgConst.SAVE_COMPLETE, successRes.Count, skipRes.Count);
+    }
+
+    private async Task DownloadExtraResourcesIfEnabled(SaveVo saveVo, SettingBean settingBean, IWindowProvider windowProvider)
+    {
+        var folder = await ResolveSaveFolderAsync(settingBean, windowProvider);
+        await DownloadExtraResourcesIfEnabled(saveVo, settingBean, folder);
+    }
+
+    private async Task DownloadExtraResourcesIfEnabled(SaveVo saveVo, SettingBean settingBean, IStorageFolder folder)
+    {
+        if (!settingBean.Config.DownloadCoverAndSongLinkOnSave || _searchService == null)
+        {
+            return;
+        }
+
+        var baseName = GlobalUtils.GetOutputName(saveVo, settingBean.Config.OutputFileNameFormat,
+            settingBean.Config.SingerSeparator, settingBean.Config.SingerCountLimit);
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(saveVo.SongVo.Pics))
+            {
+                var ext = GetImageExt(saveVo.SongVo.Pics);
+                var file = await CreateOutputFileAsync(folder, $"{baseName}-cover.{ext}", settingBean);
+                using var client = CreateHttpClient();
+                var bytes = await client.GetByteArrayAsync(saveVo.SongVo.Pics);
+                await using var stream = await file.OpenWriteAsync();
+                await stream.WriteAsync(bytes);
+                await stream.FlushAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "Download cover on save failed, songId={SongId}", saveVo.SongVo.DisplayId);
+        }
+
+        try
+        {
+            var musicApi = _searchService.GetMusicApi(saveVo.LyricVo.SearchSource);
+            var linkResult = await Task.Run(() => musicApi.GetSongLink(saveVo.SongVo.DisplayId));
+            if (!linkResult.IsSuccess() || string.IsNullOrWhiteSpace(linkResult.Data))
+            {
+                return;
+            }
+
+            using var client = CreateHttpClient();
+            using var resp = await client.GetAsync(linkResult.Data);
+            resp.EnsureSuccessStatusCode();
+            var ext = ResolveAudioExt(linkResult.Data, resp.Content.Headers.ContentType?.MediaType);
+            var file = await CreateOutputFileAsync(folder, $"{baseName}.{ext}", settingBean);
+            await using var output = await file.OpenWriteAsync();
+            await using var input = await resp.Content.ReadAsStreamAsync();
+            await input.CopyToAsync(output);
+            await output.FlushAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "Download song link on save failed, songId={SongId}", saveVo.SongVo.DisplayId);
+        }
     }
 
     private static string IsSkipStorage(SaveVo saveVo, SettingBean settingBean)
@@ -193,7 +330,38 @@ public class StorageService : IStorageService
         return ErrorMsgConst.SUCCESS;
     }
 
-    private static async Task<IStorageFolder> SelectFolder(IWindowProvider windowProvider)
+    public async Task<IStorageFolder> SelectFolderAndRememberAsync(SettingBean settingBean, IWindowProvider windowProvider)
+    {
+        var folder = await PickFolderAsync(windowProvider);
+        RememberFolder(settingBean, folder);
+        return folder;
+    }
+
+    private async Task<IStorageFolder> ResolveSaveFolderAsync(SettingBean settingBean, IWindowProvider windowProvider)
+    {
+        var cached = await TryGetRememberedFolderAsync(settingBean, windowProvider);
+        if (cached != null)
+        {
+            return cached;
+        }
+
+        var picked = await PickFolderAsync(windowProvider);
+        RememberFolder(settingBean, picked);
+        return picked;
+    }
+
+    private async Task<IStorageFolder?> TryGetRememberedFolderAsync(SettingBean settingBean, IWindowProvider windowProvider)
+    {
+        var path = settingBean.Config.LastSaveFolderPath;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        return await windowProvider.TryGetFolderFromPathAsync(path);
+    }
+
+    private static async Task<IStorageFolder> PickFolderAsync(IWindowProvider windowProvider)
     {
         var folders = await windowProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
@@ -207,12 +375,72 @@ public class StorageService : IStorageService
         return folders[0];
     }
 
+    private void RememberFolder(SettingBean settingBean, IStorageFolder folder)
+    {
+        var path = folder.Path?.LocalPath ?? folder.Path?.ToString();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        settingBean.Config.LastSaveFolderPath = path;
+        SaveConfig(settingBean);
+    }
+
+    private static string GetSafeFileStem(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "song";
+        }
+
+        var invalid = Path.GetInvalidFileNameChars();
+        var chars = name.Select(c => invalid.Contains(c) ? '_' : c).ToArray();
+        return new string(chars);
+    }
+
+    private static string GetImageExt(string url)
+    {
+        var lower = url.ToLowerInvariant();
+        if (lower.Contains(".png")) return "png";
+        if (lower.Contains(".webp")) return "webp";
+        if (lower.Contains(".bmp")) return "bmp";
+        return "jpg";
+    }
+
+    private static string ResolveAudioExt(string url, string? mediaType)
+    {
+        var lower = url.ToLowerInvariant();
+        if (lower.Contains(".flac")) return "flac";
+        if (lower.Contains(".wav")) return "wav";
+        if (lower.Contains(".m4a")) return "m4a";
+        if (lower.Contains(".aac")) return "aac";
+        if (lower.Contains(".ogg")) return "ogg";
+        if (lower.Contains(".mp3")) return "mp3";
+
+        if (string.IsNullOrWhiteSpace(mediaType))
+        {
+            return "mp3";
+        }
+
+        return mediaType.ToLowerInvariant() switch
+        {
+            "audio/flac" => "flac",
+            "audio/wav" or "audio/x-wav" => "wav",
+            "audio/mp4" => "m4a",
+            "audio/aac" => "aac",
+            "audio/ogg" => "ogg",
+            "audio/mpeg" => "mp3",
+            _ => "mp3"
+        };
+    }
+
     private static async Task WriteToFile(IStorageFolder folder, SaveVo saveVo, SettingBean settingBean)
     {
         var extension = settingBean.Param.OutputFileFormat.ToDescription().ToLower();
         var encoding = GlobalUtils.GetEncoding(settingBean.Param.Encoding);
         var filename = GlobalUtils.GetOutputName(saveVo, settingBean.Config.OutputFileNameFormat,
-            settingBean.Config.SingerSeparator);
+            settingBean.Config.SingerSeparator, settingBean.Config.SingerCountLimit);
 
         var res = await LyricUtils.GetOutputContent(saveVo.LyricVo, settingBean);
 
@@ -221,7 +449,7 @@ public class StorageService : IStorageService
         for (var i = 0; i < res.Count; i++)
         {
             var fullName = isSingle ? $"{filename}.{extension}" : $"{filename}-{i}.{extension}";
-            var file = await folder.CreateFileAsync(fullName);
+            var file = await CreateOutputFileAsync(folder, fullName, settingBean);
 
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new StreamWriter(stream, encoding);
@@ -230,4 +458,70 @@ public class StorageService : IStorageService
             await writer.FlushAsync();
         }
     }
+
+    private static async Task<IStorageFile> CreateOutputFileAsync(IStorageFolder folder, string desiredFileName, SettingBean settingBean)
+    {
+        var resolvedFileName = ResolveFileNameWithConflict(folder, desiredFileName, settingBean);
+        return await folder.CreateFileAsync(resolvedFileName);
+    }
+
+    private static string ResolveFileNameWithConflict(IStorageFolder folder, string desiredFileName, SettingBean settingBean)
+    {
+        if (settingBean.Config.FileConflictStrategy == FileConflictStrategyEnum.OVERWRITE)
+        {
+            return desiredFileName;
+        }
+
+        var folderPath = folder.Path?.LocalPath;
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            return desiredFileName;
+        }
+
+        var desiredPath = Path.Combine(folderPath, desiredFileName);
+        if (!File.Exists(desiredPath))
+        {
+            return desiredFileName;
+        }
+
+        var stem = Path.GetFileNameWithoutExtension(desiredFileName);
+        var ext = Path.GetExtension(desiredFileName);
+        var suffixPattern = NormalizeSuffixPattern(settingBean.Config.FileConflictSuffixPattern);
+
+        for (var n = 1; n <= 100000; n++)
+        {
+            var suffix = SanitizeSuffix(suffixPattern.Replace("{n}", n.ToString()));
+            var candidateName = $"{stem}{suffix}{ext}";
+            if (!File.Exists(Path.Combine(folderPath, candidateName)))
+            {
+                return candidateName;
+            }
+        }
+
+        return desiredFileName;
+    }
+
+    private static string NormalizeSuffixPattern(string? pattern)
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            return " ({n})";
+        }
+
+        return pattern.Contains("{n}") ? pattern : $"{pattern}{{n}}";
+    }
+
+    private static string SanitizeSuffix(string suffix)
+    {
+        if (string.IsNullOrEmpty(suffix))
+        {
+            return suffix;
+        }
+
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var invalidPattern = $"[{Regex.Escape(new string(invalidChars))}]";
+        return Regex.Replace(suffix, invalidPattern, "_");
+    }
 }
+
+

@@ -9,18 +9,18 @@
 [👉163MusicLyrics User Guide](https://github.com/jitwxs/163MusicLyrics/wiki)
 
 - [x] 支持网易云音乐、QQ音乐两家音乐提供商 Two providers: NetEase Cloud Music and QQ Music are supported
-- [x] 支持单曲、专辑、歌单三种查询类别，ID 和完整链接方式均可查询（即精确查询）Support 3 search types: Song, Album, Playlist; 
-  you can also search by ID or entire URL (which queries precisely)
-- [x] 每种查询类别均支持关键字查询（即模糊查询）Every search type supports searching by keywords (a.k.a. fuzzy search)
-- [x] 支持批量查询 && 扫盘查询 Support batch search && search in drive
-- [x] 支持多种歌词原文和译文的组织方式 Support multiple original lyrics and translated lyrics compositions
-- [x] 支持使用百度翻译、彩云小译 API 翻译歌词 Support using Baidu Translate, LingoCloud APIs to auto-translate lyrics
-- [x] 支持中文歌词拼音译文 Support Pinyin lyrics for chinese language music
-- [x] 支持提取（部分）歌曲试听链接 Support retrieving the preview link for (some) songs
-- [x] 支持多种文件编码格式 && 自定义文件名输出 Support multiple character encoding standards and customizable filenames for exporting
-- [x] 支持 LRC 和 SRT 输出格式 Support LRC and SRT formats for exporting
-- [x] 外文歌曲支持音译歌词 Support transliteration lyrics in foreign songs
-- [x] 支持逐字歌词模式（卡拉OK模式）lyrics synced word-by-word are supported (karaoke mode)
+- [x] 支持单曲、专辑、歌单三种查询类别，ID 与链接精确查询 Support 3 search types: Song, Album, Playlist; search by ID or full URL for precise queries
+- [x] 支持关键字模糊查询并提供结果选择窗口 Keyword-based fuzzy search with selectable result list
+- [x] 支持批量查询与目录扫描批量导入 Support batch search and drive/folder scan input
+- [x] 支持歌词结果保存与批量保存管理 Save lyrics results and manage batch saving
+- [x] 支持自动获取并下载歌曲试听直链 Support retrieving and downloading preview song links
+- [x] 支持歌曲直链在线播放与进度控制 In-app playback of preview links with progress control
+- [x] 支持下载歌曲封面图片 Support downloading song cover images
+- [x] 支持歌词格式转换（LRC <-> SRT）Built-in LRC <-> SRT format conversion
+- [x] 支持多种歌词组织与渲染（原文/译文组合）Support multiple original/translated lyrics compositions
+- [x] 支持百度翻译、彩云小译自动翻译歌词 Support Baidu Translate and CaiYun Translate APIs
+- [x] 支持本地缓存（歌词与直链）Support local cache for lyrics and song links
+- [x] 支持应用设置与主题切换 App settings with theme switching
 
 ### Downloads
 
@@ -30,7 +30,11 @@
 Enter the [Github Release](https://github.com/jitwxs/163musiclyrics/releses) page to download the latest version, you can
 click on [Changelog](https://github.com/jitwxs/163musiclyrics/wiki/changelog) to view the changes in different versions.
 
-![screenshot](./images/latest_version.png)
+<p align="center">
+  <img src="./images/v7_3_home.png" width="32%" />
+  <img src="./images/v7_3_search.png" width="32%" />
+  <img src="./images/v7_3_download.png" width="32%" />
+</p>
 
 ### Contribution
 
@@ -71,70 +75,9 @@ the project, if you are willing to contribute, you can:
 If this project brings you convenience, you're welcome to star it to let more people discover and use it. This project is
 maintained personally, all features are free. If you would like to treat the creator with a bottle of coke, you're welcome to donate.
 
-| username     | donate    | platform | date       |
-|:-------------|:----------|:-------|:-----------|
-| 晓风雅月   | 6.66 CNY     | wechat | 2025-06-18 |
-| *🧙   | 9 CNY     | wechat | 2025-06-17 |
-| C*n   | 5 CNY     | wechat | 2025-06-12 |
-| 星幻丶碎梦   | 39 CNY     | wechat | 2025-06-07 |
-| 四眼崩牙仔   | 10 CNY     | alipay | 2025-06-07 |
-| ringo   | 5 CNY     | wechat | 2025-06-06 |
-| 芹菜   | 10 CNY     | alipay | 2025-06-05 |
-| *康   | 5 CNY     | wechat | 2025-03-02 |
-| 进击的咕哒子   | 10 CNY     | wechat | 2025-02-22 |
-| 张大师          | 3 CNY     | wechat | 2024-12-26 |
-| * TUYA       | 8 CNY     | alipay | 2024-12-24 |
-| Q*L          | 1.66 CNY  | wechat | 2024-12-22 |
-| 白巧克力         | 10 CNY    | wechat | 2024-12-22 |
-| *骞           | 20 CNY    | alipay | 2024-12-03 |
-| Keppel       | 10 CNY    | wechat | 2024-11-14 |
-| 九域           | 39 CNY    | alipay | 2024-10-25 |
-| HESHIYE      | 1 CNY     | wechat | 2024-09-15 |
-| qaqleaf      | 3 CNY     | wechat | 2024-08-29 |
-| slrds5       | 5 CNY     | wechat | 2024-08-24 |
-| ボカ口P         | 1.21 CNY  | alipay | 2024-06-25 |
-| CY_次元斩       | 5 CNY     | wechat | 2024-06-23 |
-| 小海豚          | 10 CNY    | alipay | 2024-05-20 |
-| **云          | 11.45 CNY | alipay | 2024-03-07 |
-| 提瓦特履邢者       | 6.66 CNY  | wechat | 2024-02-25 |
-| *🤔          | 2 CNY     | wechat | 2024-02-25 |
-| 烈火           | 10 CNY    | wechat | 2024-02-20 |
-| 刻晴的狗         | 20 CNY    | alipay | 2024-02-20 |
-| **明          | 6 CNY     | alipay | 2024-01-10 |
-| Chalotte     | 10 CNY    | wechat | 2024-01-03 |
-| **娟          | 2.22 CNY  | alipay | 2023-12-07 |
-| **帆          | 30 CNY    | alipay | 2023-11-19 |
-| *离           | 5 CNY     | wechat | 2023-11-04 |
-| *萍           | 1 CNY     | alipay | 2023-11-01 |
-| **轩          | 10.88 CNY | alipay | 2023-10-15 |
-| 吃瓜群众         | 5 CNY     | wechat | 2023-10-13 |
-| *缘           | 3 CNY     | wechat | 2023-09-16 |
-| *n           | 5 CNY     | wechat | 2023-09-01 |
-| *坤           | 3 CNY     | alipay | 2023-09-08 |
-| **植          | 3 CNY     | alipay | 2023-08-25 |
-| *🍊          | 102 CNY   | wechat | 2023-08-12 |
-| *👑          | 95 CNY    | wechat | 2023-08-09 |
-| *俊           | 14.1 CNY  | wechat | 2023-07-16 |
-| *昊           | 5 CNY     | alipay | 2023-07-13 |
-| adreamz      | 5 CNY     | wechat | 2023-07-03 |
-| 潇筱           | 5 CNY     | wechat | 2023-05-22 |
-| L*\a         | 5 CNY     | wechat | 2023-04-26 |
-| 降世临凡         | 5 CNY     | wechat | 2023-03-30 |
-| 克雷维格         | 5 CNY     | wechat | 2023-03-14 |
-| DAOXI        | 100 CNY   | wechat | 2023-02-21 |
-| E*4          | 3 CNY     | wechat | 2023-02-12 |
-| 橘橘橘哈         | 3 CNY     | wechat | 2023-02-11 |
-| p*g          | 5 CNY     | wechat | 2023-01-26 |
-| Draco_Falcon | 5 CNY     | wechat | 2023-01-13 |
-| *刚           | 3 CNY     | wechat | 2023-01-04 |
-| **俊          | 1.11 CNY  | alipay | 2022-12-27 |
-| DJKill       | 3 CNY     | wechat | 2022-12-20 |
-| **远          | 5 CNY     | alipay | 2022-12-05 |
-| **暄          | 3.5 CNY   | alipay | 2022-11-05 |
+如您选择打赏，记得备注您的昵称，我将不定期为您登记到  [DONATE.md](./DONATE.md) 页面中。
 
-> 如您选择打赏，记得备注您的昵称，我将不定期为您登记到本页面中。
->
->If you choose to donate, remember to note your nickname, I will register it to this page at free time.
+If you choose to donate, remember to note your nickname, I will register it to  [DONATE.md](./DONATE.md) at free time.
 
 <div align="center">
     <img src="https://cdn.jsdelivr.net/gh/jitwxs/cdn/blog/configuration/alipay_donate_full.jpg" height="200" style="float:left;margin-right:20px;margin-left: 310px">

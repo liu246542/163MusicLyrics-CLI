@@ -9,4 +9,6 @@ public interface IWindowProvider
     Task<IReadOnlyList<IStorageFolder>> OpenFolderPickerAsync(FolderPickerOpenOptions options);
     
     Task SetTextAsync(string? text);
+
+    Task<IStorageFolder?> TryGetFolderFromPathAsync(string path);
 }
