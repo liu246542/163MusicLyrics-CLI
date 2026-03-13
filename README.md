@@ -9,18 +9,18 @@
 [👉163MusicLyrics User Guide](https://github.com/jitwxs/163MusicLyrics/wiki)
 
 - [x] 支持网易云音乐、QQ音乐两家音乐提供商 Two providers: NetEase Cloud Music and QQ Music are supported
-- [x] 支持单曲、专辑、歌单三种查询类别，ID 和完整链接方式均可查询（即精确查询）Support 3 search types: Song, Album, Playlist; 
-  you can also search by ID or entire URL (which queries precisely)
-- [x] 每种查询类别均支持关键字查询（即模糊查询）Every search type supports searching by keywords (a.k.a. fuzzy search)
-- [x] 支持批量查询 && 扫盘查询 Support batch search && search in drive
-- [x] 支持多种歌词原文和译文的组织方式 Support multiple original lyrics and translated lyrics compositions
-- [x] 支持使用百度翻译、彩云小译 API 翻译歌词 Support using Baidu Translate, LingoCloud APIs to auto-translate lyrics
-- [x] 支持中文歌词拼音译文 Support Pinyin lyrics for chinese language music
-- [x] 支持提取（部分）歌曲试听链接 Support retrieving the preview link for (some) songs
-- [x] 支持多种文件编码格式 && 自定义文件名输出 Support multiple character encoding standards and customizable filenames for exporting
-- [x] 支持 LRC 和 SRT 输出格式 Support LRC and SRT formats for exporting
-- [x] 外文歌曲支持音译歌词 Support transliteration lyrics in foreign songs
-- [x] 支持逐字歌词模式（卡拉OK模式）lyrics synced word-by-word are supported (karaoke mode)
+- [x] 支持单曲、专辑、歌单三种查询类别，ID 与链接精确查询 Support 3 search types: Song, Album, Playlist; search by ID or full URL for precise queries
+- [x] 支持关键字模糊查询并提供结果选择窗口 Keyword-based fuzzy search with selectable result list
+- [x] 支持批量查询与目录扫描批量导入 Support batch search and drive/folder scan input
+- [x] 支持歌词结果保存与批量保存管理 Save lyrics results and manage batch saving
+- [x] 支持自动获取并下载歌曲试听直链 Support retrieving and downloading preview song links
+- [x] 支持歌曲直链在线播放与进度控制 In-app playback of preview links with progress control
+- [x] 支持下载歌曲封面图片 Support downloading song cover images
+- [x] 支持歌词格式转换（LRC <-> SRT）Built-in LRC <-> SRT format conversion
+- [x] 支持多种歌词组织与渲染（原文/译文组合）Support multiple original/translated lyrics compositions
+- [x] 支持百度翻译、彩云小译自动翻译歌词 Support Baidu Translate and CaiYun Translate APIs
+- [x] 支持本地缓存（歌词与直链）Support local cache for lyrics and song links
+- [x] 支持应用设置与主题切换 App settings with theme switching
 
 ### Downloads
 
