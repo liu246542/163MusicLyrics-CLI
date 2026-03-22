@@ -16,31 +16,45 @@ public static class CliRunner
         SearchTypeEnum type,
         OutputFormatEnum format,
         ShowLrcTypeEnum lrcType,
-        string outputDir)
+        string outputDir,
+        string? cookie)
     {
-        // 1. 构建 SettingBean（使用默认值，后续可扩展为从 config 加载）
-        var setting = new SettingBean();
+        // 1. 加载已保存的配置（包含 Cookie、代理等），不存在则使用默认值
+        var storageService = new StorageService();
+        var setting = storageService.ReadAppConfig();
+
+        // 2. 覆盖本次运行的搜索参数
         setting.Param.SearchSource = source;
         setting.Param.OutputFileFormat = format;
         setting.Param.ShowLrcType = lrcType;
 
-        // 2. 构建 SearchService
+        // 3. 如果传入了 Cookie，保存到对应来源并持久化
+        if (!string.IsNullOrWhiteSpace(cookie))
+        {
+            if (source == SearchSourceEnum.QQ_MUSIC)
+                setting.Config.QQMusicCookie = cookie;
+            else
+                setting.Config.NetEaseCookie = cookie;
+
+            storageService.SaveConfig(setting);
+            Console.WriteLine($"[INFO] Cookie 已保存到 {Constants.GetConfigFilePath()}");
+        }
+
+        // 4. 构建 SearchService
         var searchService = new SearchService(setting);
 
-        // 3. 展开 IDs（song 直接用，album/playlist 需查询展开）
+        // 5. 展开 IDs（song 直接用，album/playlist 需查询展开）
         var inputSongIds = new List<InputSongId>();
         foreach (var rawId in ids)
         {
             try
             {
-                // CheckInputId 解析 ID 或 URL，返回含 QueryId 的对象（SongId 未设置）
                 var parsed = GlobalUtils.CheckInputId(rawId.Trim(), source, type);
                 var musicApi = searchService.GetMusicApi(parsed.SearchSource);
 
                 switch (parsed.SearchType)
                 {
                     case SearchTypeEnum.SONG_ID:
-                        // 2-arg 构造：SongId = 第一个参数，QueryId 继承自 parsed
                         inputSongIds.Add(new InputSongId(parsed.QueryId, parsed));
                         break;
                     case SearchTypeEnum.ALBUM_ID:
@@ -68,11 +82,11 @@ public static class CliRunner
             return 1;
         }
 
-        // 4. 搜索歌词
+        // 6. 搜索歌词
         Console.WriteLine($"正在下载 {inputSongIds.Count} 首歌的歌词...");
         var results = searchService.SearchSongs(inputSongIds, setting);
 
-        // 5. 保存结果（参照 StorageService.WriteToFile 的逻辑）
+        // 7. 保存结果
         Directory.CreateDirectory(outputDir);
         var ext = setting.Param.OutputFileFormat.ToDescription().ToLower();
         var encoding = GlobalUtils.GetEncoding(setting.Param.Encoding);
@@ -94,8 +108,6 @@ public static class CliRunner
                 continue;
             }
 
-            // GetOutputContent 返回 List<string>：每个元素是一个完整文件的内容字符串
-            // isSingle=true 时只有 1 个文件；SeparateFileForIsolated=true 时可能有多个
             var res = await LyricUtils.GetOutputContent(saveVo.LyricVo, setting);
             var baseName = GlobalUtils.GetOutputName(
                 saveVo,

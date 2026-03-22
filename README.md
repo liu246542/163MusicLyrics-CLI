@@ -43,6 +43,7 @@ No runtime installation required — binaries are self-contained.
 | `-f, --format` | Output format: `lrc` \| `srt` | `lrc` |
 | `-o, --output` | Output directory | `.` (current dir) |
 | `-l, --lrc-type` | Lyric layout: `stagger` \| `isolated` \| `merged` | `stagger` |
+| `-c, --cookie` | Set Cookie and save it locally (no need to repeat next time) | — |
 
 **Examples:**
 
@@ -61,6 +62,10 @@ No runtime installation required — binaries are self-contained.
 
 # Download from QQ Music
 163music-cli 123456 --source qq --output ./lyrics
+
+# Set Cookie (saved locally, no need to repeat on future runs)
+163music-cli 2055847 --cookie "your_netease_cookie_here"
+163music-cli 123456 --source qq --cookie "your_qq_cookie_here"
 ```
 
 **Lyric layout modes** (`--lrc-type`):
@@ -96,11 +101,7 @@ dotnet publish MusicLyricApp.CLI/MusicLyricApp.CLI.csproj \
 
 ## Notes
 
-- **Cookies:** Some lyrics require authentication. If downloads fail, set your cookie via the environment:
-  ```bash
-  # Not yet implemented — workaround: edit CliRunner.cs and set
-  # setting.Config.NetEaseCookie or setting.Config.QQMusicCookie directly.
-  ```
+- **Cookies:** Some lyrics require authentication. Pass your cookie with `--cookie` on first use — it will be saved to `~/.config/MusicLyricApp/MusicLyricAppSetting.json` and reused automatically on subsequent runs.
 - Output filenames follow the pattern `{song name} - {artist}.{ext}`.
 - Instrumental tracks with no lyrics will be skipped with a warning.
 

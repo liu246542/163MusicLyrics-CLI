@@ -34,6 +34,11 @@ var lrcTypeOpt = new Option<string>(
     description: "歌词合并方式: stagger (默认) | isolated | merged",
     getDefaultValue: () => "stagger");
 
+var cookieOpt = new Option<string?>(
+    aliases: ["--cookie", "-c"],
+    description: "设置 Cookie 并保存到本地配置（下次无需重复传入）",
+    getDefaultValue: () => null);
+
 var rootCommand = new RootCommand("163MusicLyrics CLI — 下载网易云/QQ音乐歌词");
 rootCommand.AddArgument(idsArg);
 rootCommand.AddOption(sourceOpt);
@@ -41,8 +46,9 @@ rootCommand.AddOption(typeOpt);
 rootCommand.AddOption(formatOpt);
 rootCommand.AddOption(outputOpt);
 rootCommand.AddOption(lrcTypeOpt);
+rootCommand.AddOption(cookieOpt);
 
-rootCommand.SetHandler(async (ids, source, type, format, output, lrcType) =>
+rootCommand.SetHandler(async (ids, source, type, format, output, lrcType, cookie) =>
 {
     var searchSource = source.ToLower() switch
     {
@@ -76,10 +82,10 @@ rootCommand.SetHandler(async (ids, source, type, format, output, lrcType) =>
         allIds.AddRange(id.Split(',', System.StringSplitOptions.RemoveEmptyEntries));
 
     var exitCode = await CliRunner.RunAsync(
-        [..allIds], searchSource, searchType, outputFormat, lrcTypeEnum, output);
+        [..allIds], searchSource, searchType, outputFormat, lrcTypeEnum, output, cookie);
 
     System.Environment.Exit(exitCode);
 },
-idsArg, sourceOpt, typeOpt, formatOpt, outputOpt, lrcTypeOpt);
+idsArg, sourceOpt, typeOpt, formatOpt, outputOpt, lrcTypeOpt, cookieOpt);
 
 return await rootCommand.InvokeAsync(args);
