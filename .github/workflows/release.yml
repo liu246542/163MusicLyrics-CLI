@@ -1,0 +1,39 @@
+name: Release CLI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish linux-x64
+        run: |
+          dotnet publish cross-platform/MusicLyricApp.CLI/MusicLyricApp.CLI.csproj \
+            -c Release -r linux-x64 --self-contained true \
+            -p:PublishSingleFile=true \
+            -o ./publish/linux-x64
+
+      - name: Publish win-x64
+        run: |
+          dotnet publish cross-platform/MusicLyricApp.CLI/MusicLyricApp.CLI.csproj \
+            -c Release -r win-x64 --self-contained true \
+            -p:PublishSingleFile=true \
+            -o ./publish/win-x64
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            publish/linux-x64/163music-cli
+            publish/win-x64/163music-cli.exe
+          generate_release_notes: true
