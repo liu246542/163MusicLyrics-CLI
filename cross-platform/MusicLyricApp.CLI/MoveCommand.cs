@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.International.Converters.TraditionalChineseToSimplifiedConverter;
 using Spectre.Console;
 
 namespace MusicLyricApp.CLI;
@@ -148,7 +149,8 @@ public static class MoveCommand
     }
 
     private static string Normalize(string s) =>
-        s.ToLowerInvariant().Replace(" ", "");
+        ChineseConverter.Convert(s, ChineseConversionDirection.TraditionalToSimplified)
+            .ToLowerInvariant().Replace(" ", "");
 
     private static double Similarity(string a, string b)
     {
