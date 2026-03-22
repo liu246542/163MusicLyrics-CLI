@@ -48,6 +48,11 @@ var cookieOpt = new Option<string?>(
     description: "设置 Cookie 并保存到本地配置（下次无需重复传入）",
     getDefaultValue: () => null);
 
+var moveToOpt = new Option<string?>(
+    name: "--move-to",
+    description: "下载完成后，将 LRC 文件匹配并移动到此音乐目录（自动重命名为音频文件名）",
+    getDefaultValue: () => null);
+
 var rootCommand = new RootCommand("163MusicLyrics CLI — 下载网易云/QQ音乐歌词");
 rootCommand.AddArgument(idsArg);
 rootCommand.AddOption(sourceOpt);
@@ -56,8 +61,9 @@ rootCommand.AddOption(formatOpt);
 rootCommand.AddOption(outputOpt);
 rootCommand.AddOption(lrcTypeOpt);
 rootCommand.AddOption(cookieOpt);
+rootCommand.AddOption(moveToOpt);
 
-rootCommand.SetHandler(async (ids, source, type, format, output, lrcType, cookie) =>
+rootCommand.SetHandler(async (ids, source, type, format, output, lrcType, cookie, moveTo) =>
 {
     var exitCode = await CliRunner.RunAsync(
         ExpandIds(ids),
@@ -66,10 +72,11 @@ rootCommand.SetHandler(async (ids, source, type, format, output, lrcType, cookie
         ParseFormat(format),
         ParseLrcType(lrcType),
         output,
-        cookie);
+        cookie,
+        moveTo);
     System.Environment.Exit(exitCode);
 },
-idsArg, sourceOpt, typeOpt, formatOpt, outputOpt, lrcTypeOpt, cookieOpt);
+idsArg, sourceOpt, typeOpt, formatOpt, outputOpt, lrcTypeOpt, cookieOpt, moveToOpt);
 
 // ── search 子命令：关键词搜索 + 交互式选择 ───────────────────────────────
 
@@ -92,6 +99,11 @@ var pickOpt = new Option<int?>(
     description: "直接选第 N 条结果，不显示交互菜单（适合脚本）",
     getDefaultValue: () => null);
 
+var searchMoveToOpt = new Option<string?>(
+    name: "--move-to",
+    description: "下载完成后，将 LRC 文件匹配并移动到此音乐目录（自动重命名为音频文件名）",
+    getDefaultValue: () => null);
+
 var searchCommand = new Command("search", "按关键词搜索，交互式选择后可直接下载");
 searchCommand.AddArgument(keywordArg);
 searchCommand.AddOption(searchSourceOpt);
@@ -100,8 +112,9 @@ searchCommand.AddOption(searchFormatOpt);
 searchCommand.AddOption(searchLrcTypeOpt);
 searchCommand.AddOption(searchOutputOpt);
 searchCommand.AddOption(pickOpt);
+searchCommand.AddOption(searchMoveToOpt);
 
-searchCommand.SetHandler(async (string keyword, string source, string type, string format, string lrcType, string? output, int? pick) =>
+searchCommand.SetHandler(async (string keyword, string source, string type, string format, string lrcType, string? output, int? pick, string? moveTo) =>
 {
     var exitCode = await SearchCommand.RunAsync(
         keyword,
@@ -110,11 +123,12 @@ searchCommand.SetHandler(async (string keyword, string source, string type, stri
         pick,
         output,
         ParseFormat(format),
-        ParseLrcType(lrcType));
+        ParseLrcType(lrcType),
+        moveTo);
     System.Environment.Exit(exitCode);
 },
 keywordArg, searchSourceOpt, searchTypeOpt, searchFormatOpt, searchLrcTypeOpt,
-searchOutputOpt, pickOpt);
+searchOutputOpt, pickOpt, searchMoveToOpt);
 
 rootCommand.AddCommand(searchCommand);
 

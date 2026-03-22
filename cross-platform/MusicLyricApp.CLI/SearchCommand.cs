@@ -17,7 +17,8 @@ public static class SearchCommand
         int? pick,
         string? outputDir,
         OutputFormatEnum format,
-        ShowLrcTypeEnum lrcType)
+        ShowLrcTypeEnum lrcType,
+        string? moveToDir = null)
     {
         var storageService = new StorageService();
         var setting = storageService.ReadAppConfig();
@@ -85,7 +86,7 @@ public static class SearchCommand
 
         // 有输出目录 → 直接下载
         return await CliRunner.RunAsync(
-            [selectedId], source, type, format, lrcType, outputDir, cookie: null);
+            [selectedId], source, type, format, lrcType, outputDir, cookie: null, moveToDir);
     }
 
     private static List<Candidate> BuildCandidates(SearchResultVo data, SearchTypeEnum type)

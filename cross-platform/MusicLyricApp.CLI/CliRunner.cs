@@ -18,7 +18,8 @@ public static class CliRunner
         OutputFormatEnum format,
         ShowLrcTypeEnum lrcType,
         string outputDir,
-        string? cookie)
+        string? cookie,
+        string? moveToDir = null)
     {
         // 1. 加载已保存的配置（包含 Cookie、代理等），不存在则使用默认值
         var storageService = new StorageService();
@@ -107,6 +108,7 @@ public static class CliRunner
         var ext = setting.Param.OutputFileFormat.ToDescription().ToLower();
         var encoding = GlobalUtils.GetEncoding(setting.Param.Encoding);
         var successCount = 0;
+        var writtenFiles = new List<string>();
 
         foreach (var (songId, resultVo) in results)
         {
@@ -140,6 +142,7 @@ public static class CliRunner
                 var fileName = isSingle ? $"{baseName}.{ext}" : $"{baseName}-{i}.{ext}";
                 var filePath = Path.Combine(targetDir, fileName);
                 await File.WriteAllTextAsync(filePath, res[i], encoding);
+                writtenFiles.Add(filePath);
                 Console.WriteLine($"[OK] {fileName}");
             }
 
@@ -150,6 +153,11 @@ public static class CliRunner
         var dirs = songTargetDirs.Values.Distinct().ToList();
         var savedPath = dirs.Count == 1 ? Path.GetFullPath(dirs[0]) : Path.GetFullPath(outputDir);
         Console.WriteLine($"\n完成：{successCount}/{results.Count} 首歌词已保存到 {savedPath}");
+
+        // 8. 如果指定了 --move-to，执行匹配移动（不影响整体退出码）
+        if (!string.IsNullOrWhiteSpace(moveToDir))
+            await MoveCommand.RunAsync(writtenFiles, moveToDir);
+
         return successCount == results.Count ? 0 : 1;
     }
 
