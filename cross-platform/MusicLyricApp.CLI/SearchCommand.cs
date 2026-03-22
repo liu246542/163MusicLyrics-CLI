@@ -68,7 +68,7 @@ public static class SearchCommand
         else
         {
             // 交互式选择（首项为取消）
-            var cancelItem = new Candidate("__cancel__", "[grey][ 取消 ][/]");
+            var cancelItem = new Candidate("__cancel__", "[grey]↩ 取消[/]");
             var choice = AnsiConsole.Prompt(
                 new SelectionPrompt<Candidate>()
                     .Title($"[bold]搜索 \"{Markup.Escape(keyword)}\" 的结果[/]（↑↓ 移动，Enter 确认，选「取消」退出）：")
