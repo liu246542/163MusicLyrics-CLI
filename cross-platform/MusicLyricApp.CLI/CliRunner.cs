@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using MusicLyricApp.Core.Service;
 using MusicLyricApp.Core.Utils;
@@ -43,8 +44,12 @@ public static class CliRunner
         // 4. 构建 SearchService
         var searchService = new SearchService(setting);
 
-        // 5. 展开 IDs（song 直接用，album/playlist 需查询展开）
+        // 5. 展开 IDs，同时记录每首歌对应的输出目录
+        //    专辑 → 自动创建 "歌手 - 专辑名" 子目录
+        //    单曲/歌单 → 使用 outputDir
         var inputSongIds = new List<InputSongId>();
+        var songTargetDirs = new Dictionary<string, string>(); // songId → targetDir
+
         foreach (var rawId in ids)
         {
             try
@@ -55,17 +60,29 @@ public static class CliRunner
                 switch (parsed.SearchType)
                 {
                     case SearchTypeEnum.SONG_ID:
-                        inputSongIds.Add(new InputSongId(parsed.QueryId, parsed));
+                        var songInput = new InputSongId(parsed.QueryId, parsed);
+                        inputSongIds.Add(songInput);
+                        songTargetDirs[parsed.QueryId] = outputDir;
                         break;
+
                     case SearchTypeEnum.ALBUM_ID:
                         var albumVo = musicApi.GetAlbumVo(parsed.QueryId).Assert().Data;
+                        var albumDir = Path.Combine(outputDir, BuildAlbumFolderName(albumVo));
                         foreach (var song in albumVo.SimpleSongVos)
+                        {
                             inputSongIds.Add(new InputSongId(song.DisplayId, parsed));
+                            songTargetDirs[song.DisplayId] = albumDir;
+                        }
+                        Console.WriteLine($"[INFO] 专辑将保存到：{albumDir}");
                         break;
+
                     case SearchTypeEnum.PLAYLIST_ID:
                         var playlistVo = musicApi.GetPlaylistVo(parsed.QueryId).Assert().Data;
                         foreach (var song in playlistVo.SimpleSongVos)
+                        {
                             inputSongIds.Add(new InputSongId(song.DisplayId, parsed));
+                            songTargetDirs[song.DisplayId] = outputDir;
+                        }
                         break;
                 }
             }
@@ -87,7 +104,6 @@ public static class CliRunner
         var results = searchService.SearchSongs(inputSongIds, setting);
 
         // 7. 保存结果
-        Directory.CreateDirectory(outputDir);
         var ext = setting.Param.OutputFileFormat.ToDescription().ToLower();
         var encoding = GlobalUtils.GetEncoding(setting.Param.Encoding);
         var successCount = 0;
@@ -108,6 +124,9 @@ public static class CliRunner
                 continue;
             }
 
+            var targetDir = songTargetDirs.TryGetValue(songId, out var d) ? d : outputDir;
+            Directory.CreateDirectory(targetDir);
+
             var res = await LyricUtils.GetOutputContent(saveVo.LyricVo, setting);
             var baseName = GlobalUtils.GetOutputName(
                 saveVo,
@@ -119,7 +138,7 @@ public static class CliRunner
             for (var i = 0; i < res.Count; i++)
             {
                 var fileName = isSingle ? $"{baseName}.{ext}" : $"{baseName}-{i}.{ext}";
-                var filePath = Path.Combine(outputDir, fileName);
+                var filePath = Path.Combine(targetDir, fileName);
                 await File.WriteAllTextAsync(filePath, res[i], encoding);
                 Console.WriteLine($"[OK] {fileName}");
             }
@@ -127,7 +146,22 @@ public static class CliRunner
             successCount++;
         }
 
-        Console.WriteLine($"\n完成：{successCount}/{results.Count} 首歌词已保存到 {Path.GetFullPath(outputDir)}");
+        // 汇总信息：按目录分组展示
+        var dirs = songTargetDirs.Values.Distinct().ToList();
+        var savedPath = dirs.Count == 1 ? Path.GetFullPath(dirs[0]) : Path.GetFullPath(outputDir);
+        Console.WriteLine($"\n完成：{successCount}/{results.Count} 首歌词已保存到 {savedPath}");
         return successCount == results.Count ? 0 : 1;
+    }
+
+    private static string BuildAlbumFolderName(AlbumVo albumVo)
+    {
+        var artist = albumVo.SimpleSongVos?.FirstOrDefault()?.Singer?.FirstOrDefault() ?? "Unknown";
+        return Sanitize($"{artist} - {albumVo.Name}");
+    }
+
+    internal static string Sanitize(string input)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return string.Concat(input.Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c));
     }
 }
