@@ -2,6 +2,30 @@ using System.CommandLine;
 using MusicLyricApp.CLI;
 using MusicLyricApp.Models;
 
+// ── 公共 option 工厂（download 和 search 子命令共用） ──────────────────────
+
+Option<string> MakeSourceOpt() => new(
+    aliases: ["--source", "-s"],
+    description: "音乐来源: netease (默认) | qq",
+    getDefaultValue: () => "netease");
+
+Option<string> MakeTypeOpt() => new(
+    aliases: ["--type", "-t"],
+    description: "搜索类型: song (默认) | album | playlist",
+    getDefaultValue: () => "song");
+
+Option<string> MakeFormatOpt() => new(
+    aliases: ["--format", "-f"],
+    description: "输出格式: lrc (默认) | srt",
+    getDefaultValue: () => "lrc");
+
+Option<string> MakeLrcTypeOpt() => new(
+    aliases: ["--lrc-type", "-l"],
+    description: "歌词合并方式: stagger (默认) | isolated | merged",
+    getDefaultValue: () => "stagger");
+
+// ── 根命令：直接按 ID 下载 ─────────────────────────────────────────────────
+
 var idsArg = new Argument<string[]>(
     name: "ids",
     description: "歌曲/专辑/歌单 ID 或 URL，多个用逗号分隔")
@@ -9,30 +33,15 @@ var idsArg = new Argument<string[]>(
     Arity = ArgumentArity.OneOrMore
 };
 
-var sourceOpt = new Option<string>(
-    aliases: ["--source", "-s"],
-    description: "音乐来源: netease (默认) | qq",
-    getDefaultValue: () => "netease");
-
-var typeOpt = new Option<string>(
-    aliases: ["--type", "-t"],
-    description: "搜索类型: song (默认) | album | playlist",
-    getDefaultValue: () => "song");
-
-var formatOpt = new Option<string>(
-    aliases: ["--format", "-f"],
-    description: "输出格式: lrc (默认) | srt",
-    getDefaultValue: () => "lrc");
+var sourceOpt   = MakeSourceOpt();
+var typeOpt     = MakeTypeOpt();
+var formatOpt   = MakeFormatOpt();
+var lrcTypeOpt  = MakeLrcTypeOpt();
 
 var outputOpt = new Option<string>(
     aliases: ["--output", "-o"],
     description: "输出目录（默认：当前目录）",
     getDefaultValue: () => ".");
-
-var lrcTypeOpt = new Option<string>(
-    aliases: ["--lrc-type", "-l"],
-    description: "歌词合并方式: stagger (默认) | isolated | merged",
-    getDefaultValue: () => "stagger");
 
 var cookieOpt = new Option<string?>(
     aliases: ["--cookie", "-c"],
@@ -50,42 +59,95 @@ rootCommand.AddOption(cookieOpt);
 
 rootCommand.SetHandler(async (ids, source, type, format, output, lrcType, cookie) =>
 {
-    var searchSource = source.ToLower() switch
-    {
-        "qq" => SearchSourceEnum.QQ_MUSIC,
-        _ => SearchSourceEnum.NET_EASE_MUSIC
-    };
-
-    var searchType = type.ToLower() switch
-    {
-        "album" => SearchTypeEnum.ALBUM_ID,
-        "playlist" => SearchTypeEnum.PLAYLIST_ID,
-        _ => SearchTypeEnum.SONG_ID
-    };
-
-    var outputFormat = format.ToLower() switch
-    {
-        "srt" => OutputFormatEnum.SRT,
-        _ => OutputFormatEnum.LRC
-    };
-
-    var lrcTypeEnum = lrcType.ToLower() switch
-    {
-        "isolated" => ShowLrcTypeEnum.ISOLATED,
-        "merged" => ShowLrcTypeEnum.MERGE,
-        _ => ShowLrcTypeEnum.STAGGER
-    };
-
-    // 支持逗号分隔的多 ID（也支持 shell 传多参数）
-    var allIds = new System.Collections.Generic.List<string>();
-    foreach (var id in ids)
-        allIds.AddRange(id.Split(',', System.StringSplitOptions.RemoveEmptyEntries));
-
     var exitCode = await CliRunner.RunAsync(
-        [..allIds], searchSource, searchType, outputFormat, lrcTypeEnum, output, cookie);
-
+        ExpandIds(ids),
+        ParseSource(source),
+        ParseType(type),
+        ParseFormat(format),
+        ParseLrcType(lrcType),
+        output,
+        cookie);
     System.Environment.Exit(exitCode);
 },
 idsArg, sourceOpt, typeOpt, formatOpt, outputOpt, lrcTypeOpt, cookieOpt);
 
+// ── search 子命令：关键词搜索 + 交互式选择 ───────────────────────────────
+
+var keywordArg = new Argument<string>(
+    name: "keyword",
+    description: "搜索关键词");
+
+var searchSourceOpt  = MakeSourceOpt();
+var searchTypeOpt    = MakeTypeOpt();
+var searchFormatOpt  = MakeFormatOpt();
+var searchLrcTypeOpt = MakeLrcTypeOpt();
+
+var searchOutputOpt = new Option<string?>(
+    aliases: ["--output", "-o"],
+    description: "选中后直接下载到此目录（不指定则仅打印 ID）",
+    getDefaultValue: () => null);
+
+var pickOpt = new Option<int?>(
+    name: "--pick",
+    description: "直接选第 N 条结果，不显示交互菜单（适合脚本）",
+    getDefaultValue: () => null);
+
+var searchCommand = new Command("search", "按关键词搜索，交互式选择后可直接下载");
+searchCommand.AddArgument(keywordArg);
+searchCommand.AddOption(searchSourceOpt);
+searchCommand.AddOption(searchTypeOpt);
+searchCommand.AddOption(searchFormatOpt);
+searchCommand.AddOption(searchLrcTypeOpt);
+searchCommand.AddOption(searchOutputOpt);
+searchCommand.AddOption(pickOpt);
+
+searchCommand.SetHandler(async (string keyword, string source, string type, string format, string lrcType, string? output, int? pick) =>
+{
+    var exitCode = await SearchCommand.RunAsync(
+        keyword,
+        ParseSource(source),
+        ParseType(type),
+        pick,
+        output,
+        ParseFormat(format),
+        ParseLrcType(lrcType));
+    System.Environment.Exit(exitCode);
+},
+keywordArg, searchSourceOpt, searchTypeOpt, searchFormatOpt, searchLrcTypeOpt,
+searchOutputOpt, pickOpt);
+
+rootCommand.AddCommand(searchCommand);
+
 return await rootCommand.InvokeAsync(args);
+
+// ── 解析辅助 ──────────────────────────────────────────────────────────────
+
+static string[] ExpandIds(string[] ids)
+{
+    var result = new System.Collections.Generic.List<string>();
+    foreach (var id in ids)
+        result.AddRange(id.Split(',', System.StringSplitOptions.RemoveEmptyEntries));
+    return [..result];
+}
+
+static MusicLyricApp.Models.SearchSourceEnum ParseSource(string s) =>
+    s.ToLower() == "qq" ? MusicLyricApp.Models.SearchSourceEnum.QQ_MUSIC
+                        : MusicLyricApp.Models.SearchSourceEnum.NET_EASE_MUSIC;
+
+static MusicLyricApp.Models.SearchTypeEnum ParseType(string s) => s.ToLower() switch
+{
+    "album"    => MusicLyricApp.Models.SearchTypeEnum.ALBUM_ID,
+    "playlist" => MusicLyricApp.Models.SearchTypeEnum.PLAYLIST_ID,
+    _          => MusicLyricApp.Models.SearchTypeEnum.SONG_ID
+};
+
+static MusicLyricApp.Models.OutputFormatEnum ParseFormat(string s) =>
+    s.ToLower() == "srt" ? MusicLyricApp.Models.OutputFormatEnum.SRT
+                         : MusicLyricApp.Models.OutputFormatEnum.LRC;
+
+static MusicLyricApp.Models.ShowLrcTypeEnum ParseLrcType(string s) => s.ToLower() switch
+{
+    "isolated" => MusicLyricApp.Models.ShowLrcTypeEnum.ISOLATED,
+    "merged"   => MusicLyricApp.Models.ShowLrcTypeEnum.MERGE,
+    _          => MusicLyricApp.Models.ShowLrcTypeEnum.STAGGER
+};

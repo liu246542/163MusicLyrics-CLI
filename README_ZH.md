@@ -82,6 +82,37 @@ chmod +x 163music-cli
 
 ---
 
+## 关键词搜索（`search` 子命令）
+
+通过关键词搜索，然后用交互式菜单（上下键 + 回车）选择目标：
+
+```bash
+163music-cli search <关键词> [选项]
+```
+
+| 选项 | 说明 | 默认值 |
+|------|------|--------|
+| `-s, --source` | 音乐来源 | `netease` |
+| `-t, --type` | 搜索类型：`song` \| `album` \| `playlist` | `song` |
+| `-o, --output` | 选中后直接下载到此目录 | 仅打印 ID |
+| `--pick N` | 直接选第 N 条，不显示菜单（适合脚本） | — |
+
+```bash
+# 交互式：上下键选择，回车确认
+163music-cli search "晴天"
+
+# 搜索并直接下载选中结果
+163music-cli search "晴天" --output ./lyrics
+
+# 非交互：取第 1 条结果，仅打印 ID
+163music-cli search "晴天" --pick 1
+
+# 非交互：取第 2 条结果并下载
+163music-cli search "晴天" --pick 2 --output ./lyrics
+```
+
+---
+
 ## Cookie 说明
 
 部分歌词需要登录才能获取。`--cookie` 会根据 `--source` 自动区分来源：

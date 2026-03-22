@@ -78,6 +78,37 @@ No runtime installation required — binaries are self-contained.
 
 ---
 
+## Keyword Search (`search` subcommand)
+
+Use the `search` subcommand to find songs by keyword with an interactive selection menu:
+
+```bash
+163music-cli search "keyword" [options]
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-s, --source` | Music provider | `netease` |
+| `-t, --type` | Search type: `song` \| `album` \| `playlist` | `song` |
+| `-o, --output` | Download selected result to this directory | *(print ID only)* |
+| `--pick N` | Select Nth result without interactive menu (for scripts) | — |
+
+```bash
+# Interactive: arrow keys to navigate, Enter to confirm
+163music-cli search "晴天"
+
+# Search and download the selected result directly
+163music-cli search "晴天" --output ./lyrics
+
+# Non-interactive: pick result #1 and print its ID
+163music-cli search "晴天" --pick 1
+
+# Non-interactive: pick result #2 and download it
+163music-cli search "晴天" --pick 2 --output ./lyrics
+```
+
+---
+
 ## Build from Source
 
 Requires [.NET 9 SDK](https://dotnet.microsoft.com/download) or later.
