@@ -9,6 +9,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        include:
+          - rid: linux-x64
+            artifact: 163music-cli
+          - rid: linux-arm64
+            artifact: 163music-cli
+          - rid: osx-x64
+            artifact: 163music-cli
+          - rid: osx-arm64
+            artifact: 163music-cli
+          - rid: win-x64
+            artifact: 163music-cli.exe
+
     steps:
       - uses: actions/checkout@v4
 
@@ -16,24 +30,37 @@ jobs:
         with:
           dotnet-version: '10.x'
 
-      - name: Publish linux-x64
+      - name: Publish ${{ matrix.rid }}
         run: |
           dotnet publish cross-platform/MusicLyricApp.CLI/MusicLyricApp.CLI.csproj \
-            -c Release -r linux-x64 --self-contained true \
+            -c Release -r ${{ matrix.rid }} --self-contained true \
             -p:PublishSingleFile=true \
-            -o ./publish/linux-x64
+            -o ./publish/${{ matrix.rid }}
 
-      - name: Publish win-x64
+      - name: Package artifact
         run: |
-          dotnet publish cross-platform/MusicLyricApp.CLI/MusicLyricApp.CLI.csproj \
-            -c Release -r win-x64 --self-contained true \
-            -p:PublishSingleFile=true \
-            -o ./publish/win-x64
+          cd ./publish/${{ matrix.rid }}
+          zip ../../163music-cli-${{ matrix.rid }}.zip ${{ matrix.artifact }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 163music-cli-${{ matrix.rid }}
+          path: 163music-cli-${{ matrix.rid }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            publish/linux-x64/163music-cli
-            publish/win-x64/163music-cli.exe
+          files: ./artifacts/*.zip
           generate_release_notes: true
