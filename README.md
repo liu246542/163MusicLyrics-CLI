@@ -46,6 +46,7 @@ No runtime installation required — binaries are self-contained.
 | `-o, --output` | Output directory | `.` (current dir) |
 | `-l, --lrc-type` | Lyric layout: `stagger` \| `isolated` \| `merged` | `stagger` |
 | `-c, --cookie` | Set Cookie and save it locally (no need to repeat next time) | — |
+| `--move-to` | After downloading, match and move LRC files into this music directory (auto-renamed to audio filename stem) | — |
 
 **Examples:**
 
@@ -68,6 +69,9 @@ No runtime installation required — binaries are self-contained.
 # Set Cookie (saved locally, no need to repeat on future runs)
 163music-cli 2055847 --cookie "your_netease_cookie_here"
 163music-cli 123456 --source qq --cookie "your_qq_cookie_here"
+
+# Download an album and move matched LRC files into the music directory
+163music-cli 34793562 --type album --output ./tmp-lyrics --move-to /music/Jay/
 ```
 
 **Lyric layout modes** (`--lrc-type`):
@@ -92,9 +96,10 @@ Use the `search` subcommand to find songs by keyword with an interactive selecti
 | `-t, --type` | Search type: `song` \| `album` \| `playlist` | `song` |
 | `-o, --output` | Download selected result to this directory | *(print ID only)* |
 | `--pick N` | Select Nth result without interactive menu (for scripts) | — |
+| `--move-to` | After downloading, match and move LRC files into this music directory | — |
 
 ```bash
-# Interactive: arrow keys to navigate, Enter to confirm
+# Interactive: arrow keys to navigate, Enter to confirm, select ↩ 取消 to exit
 163music-cli search "晴天"
 
 # Search and download the selected result directly

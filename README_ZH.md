@@ -50,6 +50,7 @@ chmod +x 163music-cli
 | `-o, --output` | 输出目录 | `.`（当前目录）|
 | `-l, --lrc-type` | 歌词排列方式：`stagger` \| `isolated` \| `merged` | `stagger` |
 | `-c, --cookie` | 设置 Cookie 并保存到本地配置（下次无需重复传入） | — |
+| `--move-to` | 下载完成后，将 LRC 文件匹配并移动到此音乐目录（自动重命名为对应音频文件名） | — |
 
 **示例：**
 
@@ -72,6 +73,9 @@ chmod +x 163music-cli
 # 首次设置 Cookie（同时执行本次下载，之后无需再传）
 163music-cli 2055847 --cookie "MUSIC_U=xxx; __csrf=xxx"
 163music-cli 123456 --source qq --cookie "uin=xxx; qm_keyst=xxx"
+
+# 下载专辑后，将歌词匹配移动到音乐目录
+163music-cli 34793562 --type album --output ./tmp-lyrics --move-to /music/周杰伦/
 ```
 
 **歌词排列方式说明（`--lrc-type`）：**
@@ -96,9 +100,10 @@ chmod +x 163music-cli
 | `-t, --type` | 搜索类型：`song` \| `album` \| `playlist` | `song` |
 | `-o, --output` | 选中后直接下载到此目录 | 仅打印 ID |
 | `--pick N` | 直接选第 N 条，不显示菜单（适合脚本） | — |
+| `--move-to` | 下载完成后，将 LRC 文件匹配并移动到此音乐目录 | — |
 
 ```bash
-# 交互式：上下键选择，回车确认
+# 交互式：上下键选择，回车确认，选「↩ 取消」退出
 163music-cli search "晴天"
 
 # 搜索并直接下载选中结果
