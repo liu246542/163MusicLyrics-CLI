@@ -4,6 +4,8 @@ A command-line tool for downloading lyrics from NetEase Cloud Music and QQ Music
 
 > Forked from [jitwxs/163MusicLyrics](https://github.com/jitwxs/163MusicLyrics). This fork strips the GUI and exposes the core functionality as a CLI.
 
+[中文说明 README_ZH.md](./README_ZH.md)
+
 [![Release](https://img.shields.io/github/v/release/liu246542/163MusicLyrics-CLI.svg)](https://github.com/liu246542/163MusicLyrics-CLI/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
