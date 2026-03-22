@@ -11,6 +11,20 @@ A command-line tool for downloading lyrics from NetEase Cloud Music and QQ Music
 
 ---
 
+## Demo
+
+![CLI demo](images/cli_example.gif)
+
+The demo above shows the full `search` + `--move-to` workflow:
+
+1. Search for an album by keyword (`--type album`) — an interactive menu appears with results
+2. Select the target album with arrow keys and Enter
+3. Lyrics are downloaded to `./lyrics/` (an artist-album subfolder is created automatically)
+4. `--move-to` scans the music directory, matches each LRC file to its audio counterpart using fuzzy similarity (supports Traditional/Simplified Chinese), and presents a confirmation table
+5. On confirmation, LRC files are moved and renamed to match the audio filename stem
+
+---
+
 ## Installation
 
 Download the latest binary from [Releases](https://github.com/liu246542/163MusicLyrics-CLI/releases):
